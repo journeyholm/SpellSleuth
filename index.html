@@ -1,698 +1,957 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SpellSleuth: The Imposter Word</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; touch-action: manipulation; }
-        .game-card { background-color: rgba(30, 41, 59, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(71, 85, 105, 0.5); animation: fadeIn 0.5s ease-in-out; }
-        .btn { transition: all 0.2s ease-in-out; }
-        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
-        .btn-correct { background-color: #22c55e !important; border-color: #16a34a !important; color: white !important; transform: scale(1.05); }
-        .btn-incorrect { background-color: #ef4444 !important; border-color: #dc2626 !important; color: white !important; opacity: 0.7; }
-        .btn-disabled { opacity: 0.5; cursor: not-allowed; }
-        .bg-pattern {
-            background-image:
-                linear-gradient(rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.98)),
-                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%231e293b' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2-H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-        }
-        .timer-bar, .hp-bar-fill, #xp-bar-fill { transition: width 0.3s ease-out; }
-        .life-lost { animation: lifeLost 0.5s ease-in-out; }
-        .streak-bar-fill { transition: width 0.3s ease-in-out; }
-        .scrambled-letter { display: inline-block; animation: popIn 0.5s ease-out forwards; opacity: 0; }
-        .sprite-hit { animation: spriteHit 0.5s ease-in-out; }
-        .word-reveal { animation: wordReveal 1s ease-out forwards; }
-        .achievement-toast { animation: slideInUp 0.5s ease-out forwards, slideOutDown 0.5s ease-in 4.5s forwards; }
-        .level-up-flash { animation: levelUpFlash 1.5s ease-out; }
-        .decrypting-letter { animation: decrypt 0.2s ease-out forwards; opacity: 0; }
-        .avatar-selected { box-shadow: 0 0 0 4px #22d3ee; transform: scale(1.1); }
-        .locked-shake { animation: lockedShake 0.4s ease-in-out; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-        @keyframes lifeLost { 0% { opacity: 1; transform: scale(1.2); } 100% { opacity: 0.3; transform: scale(1); } }
-        @keyframes popIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes spriteHit { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px) scale(1.1); } }
-        @keyframes wordReveal { 0% { opacity: 0; letter-spacing: 0.5em; filter: blur(5px); } 40% { opacity: 1; filter: blur(0); } 100% { letter-spacing: 0.1em; } }
-        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        @keyframes slideOutDown { from { transform: translateY(0); opacity: 1; } to { transform: translateY(100%); opacity: 0; } }
-        @keyframes levelUpFlash { 0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); } 50% { box-shadow: 0 0 25px 10px rgba(56, 189, 248, 0.7); } }
-        @keyframes decrypt { from { opacity: 0; transform: translateY(-10px); filter: blur(5px); } to { opacity: 1; transform: translateY(0); filter: blur(0); } }
-        @keyframes lockedShake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-5px); }
-            40%, 80% { transform: translateX(5px); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SpellSleuth: The Imposter Word</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#080B1A; --ink-2:#0E1430; --panel:#121A38; --panel-2:#0F1730;
+  --line:rgba(122,162,255,.16); --line-2:rgba(122,162,255,.28);
+  --badge:#F4B740; --badge-2:#FFD684; --badge-ink:#2A1D02;
+  --decode:#3DDC97; --decode-dim:#1c6f4e;
+  --alert:#FF5C7A; --alert-dim:#7a2338;
+  --cipher:#7AA2FF; --cipher-2:#A9C2FF;
+  --paper:#ECE4CF; --paper-line:#c9bfa3; --paper-ink:#26210f;
+  --txt:#EAEEFA; --muted:#93A0C4; --muted-2:#6E7BA0;
+  --radius:16px; --radius-sm:11px;
+  --shadow:0 24px 60px -24px rgba(0,0,0,.8), 0 2px 0 rgba(122,162,255,.05) inset;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Inter',system-ui,sans-serif; color:var(--txt); background:var(--ink);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+  padding:20px 16px; position:relative; overflow-x:hidden; touch-action:manipulation}
+body::before{content:""; position:fixed; inset:0; z-index:-2; pointer-events:none;
+  background:radial-gradient(1100px 720px at 50% -8%, #16204a 0%, rgba(14,20,48,.4) 42%, transparent 70%),
+    radial-gradient(900px 900px at 88% 108%, rgba(244,183,64,.07), transparent 60%),
+    linear-gradient(180deg,#0A0F24,#070A18 70%)}
+body::after{content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.5;
+  background-image:radial-gradient(rgba(122,162,255,.10) 1px, transparent 1.4px); background-size:26px 26px;
+  -webkit-mask-image:radial-gradient(70% 70% at 50% 35%, #000 40%, transparent 100%);
+          mask-image:radial-gradient(70% 70% at 50% 35%, #000 40%, transparent 100%)}
+#scanline{position:fixed; left:0; right:0; height:180px; z-index:0; pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(122,162,255,.05),transparent);
+  animation:sweep 9s linear infinite; opacity:.7}
+@keyframes sweep{0%{transform:translateY(-200px)}100%{transform:translateY(105vh)}}
+.wrap{width:100%; max-width:720px; margin:0 auto; position:relative; z-index:1}
+.panel{background:linear-gradient(180deg,rgba(24,33,66,.92),rgba(15,23,48,.92));
+  border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow);
+  backdrop-filter:blur(10px); position:relative; overflow:hidden}
+.panel::before{content:""; position:absolute; top:0; left:14px; right:14px; height:1px;
+  background:linear-gradient(90deg,transparent,var(--line-2),transparent)}
+.pad{padding:26px}
+@media(min-width:640px){.pad{padding:34px}}
+.enter{animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes enter{from{opacity:0; transform:translateY(14px) scale(.985)}to{opacity:1; transform:none}}
+.eyebrow{font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.32em;
+  text-transform:uppercase; color:var(--cipher); font-weight:700}
+h1.brand{font-family:'Chakra Petch',sans-serif; font-weight:700; letter-spacing:-.01em;
+  font-size:clamp(34px,7vw,52px); line-height:.95; margin:0;
+  background:linear-gradient(180deg,#fff,var(--badge-2)); -webkit-background-clip:text;
+  background-clip:text; color:transparent; text-shadow:0 0 40px rgba(244,183,64,.18)}
+.hud{font-family:'Chakra Petch',sans-serif; letter-spacing:.02em}
+.mono{font-family:'Space Mono',monospace}
+.muted{color:var(--muted)}
+.btn{font-family:'Chakra Petch',sans-serif; font-weight:600; letter-spacing:.02em;
+  border:1px solid var(--line-2); border-radius:var(--radius-sm); cursor:pointer;
+  color:var(--txt); background:rgba(122,162,255,.06); padding:13px 18px; font-size:15px;
+  transition:transform .16s ease, box-shadow .16s ease, background .16s ease, border-color .16s;
+  -webkit-tap-highlight-color:transparent}
+.btn:hover:not(:disabled){transform:translateY(-2px); box-shadow:0 10px 22px -12px rgba(0,0,0,.7); border-color:var(--cipher)}
+.btn:active:not(:disabled){transform:translateY(0)}
+.btn:focus-visible{outline:3px solid var(--cipher); outline-offset:2px}
+.btn:disabled{cursor:not-allowed; opacity:.5}
+.btn-primary{background:linear-gradient(180deg,var(--badge-2),var(--badge)); color:var(--badge-ink);
+  border-color:transparent; font-weight:700; box-shadow:0 10px 26px -12px rgba(244,183,64,.7)}
+.btn-primary:hover:not(:disabled){box-shadow:0 14px 30px -10px rgba(244,183,64,.8)}
+.btn-ghost{background:rgba(122,162,255,.05)}
+.btn-danger{background:rgba(255,92,122,.12); border-color:rgba(255,92,122,.4); color:#ffd6de}
+.btn-decode{background:rgba(61,220,151,.14); border-color:rgba(61,220,151,.45); color:#c9ffe6}
+.iconbtn{width:40px; height:40px; display:grid; place-items:center; border-radius:12px; font-size:19px; padding:0}
+.opt{width:100%; text-align:center; font-family:'Space Mono',monospace; font-weight:700;
+  font-size:clamp(16px,3.6vw,20px); letter-spacing:.02em; padding:18px 12px;
+  background:rgba(15,22,46,.9); border:1px solid var(--line-2); border-radius:var(--radius-sm);
+  color:var(--txt); cursor:pointer; position:relative; overflow:hidden;
+  transition:transform .14s ease, border-color .14s ease, background .14s ease;
+  overflow-wrap:anywhere; word-break:break-word}
+.opt::after{content:""; position:absolute; inset:0;
+  background:linear-gradient(115deg,transparent 30%,rgba(122,162,255,.14) 50%,transparent 70%);
+  transform:translateX(-120%); transition:transform .5s ease}
+.opt:hover:not(:disabled){transform:translateY(-2px); border-color:var(--cipher)}
+.opt:hover:not(:disabled)::after{transform:translateX(120%)}
+.opt:focus-visible{outline:3px solid var(--cipher); outline-offset:2px}
+.opt:disabled{cursor:default}
+@media(max-width:460px){ #options,#battle-options{grid-template-columns:1fr !important} }
+.opt.correct{background:linear-gradient(180deg,rgba(61,220,151,.28),rgba(61,220,151,.14));
+  border-color:var(--decode); color:#eafff5; box-shadow:0 0 0 1px var(--decode), 0 0 26px -6px var(--decode)}
+.opt.wrong{background:linear-gradient(180deg,rgba(255,92,122,.24),rgba(255,92,122,.12));
+  border-color:var(--alert); color:#ffe6ec; animation:nudge .4s ease}
+.opt.dim{opacity:.32; filter:grayscale(.4)}
+.meter{width:100%; height:9px; border-radius:999px; background:rgba(122,162,255,.12);
+  overflow:hidden; border:1px solid var(--line)}
+.meter>span{display:block; height:100%; border-radius:999px; transition:width .3s ease}
+.meter.slim{height:7px}
+.fill-cipher{background:linear-gradient(90deg,var(--cipher),var(--cipher-2))}
+.fill-badge{background:linear-gradient(90deg,var(--badge),var(--badge-2))}
+.fill-decode{background:linear-gradient(90deg,var(--decode-dim),var(--decode))}
+.fill-alert{background:linear-gradient(90deg,var(--alert-dim),var(--alert))}
+.timer>span{transition:none}
+.chip{display:inline-flex; align-items:center; gap:7px; font-family:'Space Mono',monospace;
+  font-size:12.5px; font-weight:700; padding:6px 11px; border-radius:999px;
+  background:rgba(122,162,255,.08); border:1px solid var(--line)}
+.chip .k{color:var(--muted); font-weight:400}
+.tierbadge{font-family:'Space Mono',monospace; font-size:10px; letter-spacing:.14em; padding:3px 8px;
+  border-radius:999px; text-transform:uppercase; font-weight:700; border:1px solid}
+.t1{color:var(--decode); border-color:rgba(61,220,151,.5); background:rgba(61,220,151,.1)}
+.t2{color:var(--cipher); border-color:rgba(122,162,255,.5); background:rgba(122,162,255,.1)}
+.t3{color:var(--badge); border-color:rgba(244,183,64,.5); background:rgba(244,183,64,.12)}
+.life{font-size:22px; transition:opacity .5s ease, transform .3s ease; filter:drop-shadow(0 0 6px rgba(255,92,122,.4))}
+.life.out{opacity:.22; transform:scale(.85); filter:grayscale(1)}
+.life.pop{animation:lifepop .5s ease}
+@keyframes lifepop{0%{transform:scale(1.4)}100%{transform:scale(.85)}}
+.readout{position:relative; border-radius:14px; padding:22px 18px; min-height:96px;
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  background:linear-gradient(180deg,rgba(236,228,207,.05),rgba(236,228,207,.02)),
+    repeating-linear-gradient(0deg,transparent 0 3px,rgba(122,162,255,.05) 3px 4px);
+  border:1px solid var(--line-2); box-shadow:inset 0 0 40px -18px rgba(122,162,255,.5)}
+.readout .corner{position:absolute; width:14px; height:14px; border:2px solid var(--cipher); opacity:.55}
+.readout .c1{top:8px; left:8px; border-right:0; border-bottom:0}
+.readout .c2{top:8px; right:8px; border-left:0; border-bottom:0}
+.readout .c3{bottom:8px; left:8px; border-right:0; border-top:0}
+.readout .c4{bottom:8px; right:8px; border-left:0; border-top:0}
+.readout .scan{position:absolute; left:6px; right:6px; height:2px; top:0;
+  background:linear-gradient(90deg,transparent,var(--cipher),transparent);
+  box-shadow:0 0 12px var(--cipher); animation:scanmove 2.4s ease-in-out infinite; opacity:.8}
+@keyframes scanmove{0%,100%{top:8%}50%{top:88%}}
+.prompt{font-family:'Space Mono',monospace; font-size:clamp(19px,4.6vw,27px);
+  font-weight:700; letter-spacing:.02em; color:#fff}
+.prompt .blank{color:var(--badge); border-bottom:2px dashed var(--badge); padding:0 .35em}
+.cipherword{font-family:'Space Mono',monospace; font-weight:700; letter-spacing:.18em;
+  font-size:clamp(26px,6vw,40px); color:var(--decode)}
+.cipherword .glyph{display:inline-block}
+.reveal-in{animation:revealIn .22s ease both}
+@keyframes revealIn{from{opacity:0; transform:translateY(-8px); filter:blur(5px)}to{opacity:1; transform:none; filter:blur(0)}}
+.scrambled span{display:inline-block; animation:pop .45s ease both}
+@keyframes pop{from{opacity:0; transform:translateY(16px) rotate(-8deg)}to{opacity:1; transform:none}}
+.stamp{position:absolute; top:50%; left:50%; padding:5px 14px; border-radius:8px;
+  font-family:'Chakra Petch',sans-serif; font-weight:700; letter-spacing:.16em; font-size:14px;
+  border:2px solid; text-transform:uppercase; opacity:0; transform:translate(-50%,-50%) rotate(-13deg) scale(1.5)}
+.stamp.show{animation:stampin .45s cubic-bezier(.2,.9,.3,1.2) forwards}
+@keyframes stampin{to{opacity:.95; transform:translate(-50%,-50%) rotate(-13deg) scale(1)}}
+.stamp.ok{color:var(--decode); border-color:var(--decode); box-shadow:0 0 22px -6px var(--decode)}
+.stamp.no{color:var(--alert); border-color:var(--alert); box-shadow:0 0 22px -6px var(--alert)}
+.feedback{border-radius:12px; padding:14px 16px; border:1px solid var(--line);
+  background:rgba(10,15,34,.6); animation:enter .3s ease both}
+.tiptag{font-family:'Space Mono',monospace; font-size:11px; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--badge)}
+.arena{position:relative; height:190px; border-radius:14px; overflow:hidden;
+  background:radial-gradient(120% 80% at 50% 120%, rgba(255,92,122,.18), transparent 60%),
+    repeating-linear-gradient(90deg,transparent 0 38px,rgba(122,162,255,.04) 38px 39px);
+  border:1px solid var(--line)}
+.fighter{position:absolute; bottom:16px; font-size:clamp(48px,11vw,74px); transition:transform .3s ease}
+.fighter.p{left:22px} .fighter.b{right:22px; filter:drop-shadow(0 0 18px rgba(255,92,122,.5))}
+.hit-p{animation:hitp .45s ease} .hit-b{animation:hitb .45s ease}
+@keyframes hitp{0%,100%{transform:none}40%{transform:translateX(-14px) scale(.95)}}
+@keyframes hitb{0%,100%{transform:none}40%{transform:translateX(14px) rotate(6deg) scale(1.08)}}
+#toasts{position:fixed; right:16px; bottom:16px; z-index:80; display:flex; flex-direction:column; gap:10px; width:min(320px,86vw)}
+.toast{background:linear-gradient(180deg,var(--badge-2),var(--badge)); color:var(--badge-ink);
+  border-radius:12px; padding:12px 15px; box-shadow:0 18px 40px -16px rgba(0,0,0,.7);
+  animation:toastin .4s ease both, toastout .4s ease 4.4s both}
+@keyframes toastin{from{opacity:0; transform:translateX(40px)}to{opacity:1; transform:none}}
+@keyframes toastout{to{opacity:0; transform:translateY(20px)}}
+.modal{position:fixed; inset:0; z-index:70; display:grid; place-items:center; padding:16px;
+  background:rgba(4,7,18,.72); backdrop-filter:blur(6px); animation:enter .25s ease both}
+.modal .panel{width:100%; max-width:640px; max-height:88vh; overflow:auto}
+.avatar{font-size:34px; padding:10px; border-radius:12px; cursor:pointer; text-align:center;
+  border:1px solid transparent; transition:transform .16s ease, border-color .16s}
+.avatar:hover{transform:scale(1.1)}
+.avatar.pick{border-color:var(--cipher); background:rgba(122,162,255,.12); box-shadow:0 0 0 2px var(--cipher)}
+.avatar.locked{opacity:.32; cursor:not-allowed}
+.avatar.locked:hover{transform:none}
+.shake{animation:nudge .4s ease}
+@keyframes nudge{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.gadget{width:100%; text-align:left; display:flex; align-items:center; justify-content:space-between;
+  gap:12px; padding:13px 15px; border-radius:12px; background:rgba(15,22,46,.8);
+  border:1px solid var(--line-2); cursor:pointer; transition:border-color .16s, transform .16s}
+.gadget:hover:not(:disabled){transform:translateY(-2px); border-color:var(--badge)}
+.gadget:disabled{opacity:.45; cursor:not-allowed}
+.gadget.equipped{border-color:var(--decode); box-shadow:0 0 0 1px var(--decode)}
+.ach{display:flex; gap:14px; align-items:center; padding:12px; border-radius:12px;
+  background:rgba(15,22,46,.7); border:1px solid var(--line)}
+.ach.locked{opacity:.5}
+.ach .ic{font-size:28px}
+.levelflash{animation:lvl 1.5s ease}
+@keyframes lvl{0%,100%{box-shadow:var(--shadow)}45%{box-shadow:var(--shadow),0 0 0 3px var(--badge),0 0 40px 8px rgba(244,183,64,.5)}}
+#confetti{position:fixed; inset:0; z-index:60; pointer-events:none; overflow:hidden}
+.conf{position:absolute; font-family:'Space Mono',monospace; font-weight:700; will-change:transform; animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(var(--r))}}
+.hidden{display:none !important}
+.divider{height:1px; background:linear-gradient(90deg,transparent,var(--line-2),transparent); margin:18px 0}
+input.field,textarea.field{width:100%; font-family:'Space Mono',monospace; font-weight:700;
+  font-size:18px; padding:13px; border-radius:12px; color:#fff; background:rgba(10,15,34,.8);
+  border:2px solid var(--line-2); outline:none; letter-spacing:.04em}
+input.field{text-align:center; font-size:22px; letter-spacing:.06em}
+textarea.field{text-align:left; font-size:15px; line-height:1.6; resize:vertical; min-height:130px}
+input.field:focus,textarea.field:focus{border-color:var(--cipher); box-shadow:0 0 0 3px rgba(122,162,255,.2)}
+/* proofreading tokens */
+.proof-sentence{font-size:clamp(18px,4.4vw,24px); line-height:2.1; text-align:center; padding:6px 4px}
+.tok{display:inline-block; padding:2px 6px; margin:2px 1px; border-radius:8px; cursor:pointer;
+  border:1px solid transparent; transition:background .14s, border-color .14s, transform .12s}
+.tok:hover{background:rgba(122,162,255,.14); border-color:var(--line-2)}
+.tok:focus-visible{outline:2px solid var(--cipher); outline-offset:1px}
+.tok.right{background:rgba(61,220,151,.2); border-color:var(--decode); color:#eafff5}
+.tok.wrong-pick{background:rgba(255,92,122,.2); border-color:var(--alert); color:#ffe6ec}
+.tok.reveal{background:rgba(244,183,64,.2); border-color:var(--badge); color:#fff2d6}
+.tok.locked{cursor:default}
+/* custom list rows */
+.listrow{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px;
+  border-radius:12px; background:rgba(15,22,46,.7); border:1px solid var(--line)}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important}
+  #scanline,.readout .scan{display:none}
+}
+body.nomotion #scanline,body.nomotion .readout .scan{display:none}
+body.nomotion .opt::after{display:none}
+</style>
 </head>
-<body class="bg-slate-900 bg-pattern text-slate-200 flex items-center justify-center min-h-screen p-4">
+<body>
+<div id="scanline"></div>
+<div id="confetti"></div>
+<div class="wrap">
 
-    <div id="game-container" class="w-full max-w-2xl mx-auto">
-
-        <!-- Start Screen -->
-        <div id="start-screen" class="text-center">
-            <div class="game-card rounded-2xl p-8 md:p-12 shadow-2xl">
-                 <div class="flex justify-center items-center mb-4">
-                    <span id="start-screen-avatar" class="text-6xl mr-4">🕵️</span>
-                    <div>
-                        <h1 class="text-4xl md:text-5xl font-black text-cyan-400 tracking-tighter">SpellSleuth</h1>
-                        <p class="text-lg md:text-xl text-slate-300">Identify the imposter word.</p>
-                    </div>
-                </div>
-                
-                <div class="bg-slate-800/50 rounded-lg p-4 mb-6">
-                    <div class="flex justify-between items-center mb-2">
-                        <span id="player-level" class="font-bold text-cyan-400 text-lg">Agent Level 1</span>
-                        <span id="player-xp" class="font-semibold text-slate-300">0 / 100 XP</span>
-                    </div>
-                    <div class="w-full bg-slate-700 rounded-full h-4 border-2 border-slate-600"><div id="xp-bar-fill" class="bg-cyan-400 h-full rounded-full"></div></div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button id="start-button" class="btn w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-4 px-8 rounded-lg text-xl shadow-lg col-span-1 md:col-span-2">Start Mission</button>
-                    <button id="q-branch-button" class="btn w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-2 px-4 rounded-lg">Q-Branch</button>
-                    <button id="achievements-button" class="btn w-full bg-slate-700 hover:bg-slate-600 text-yellow-400 font-bold py-2 px-4 rounded-lg">View Badges</button>
-                    <p id="high-score-display" class="md:col-span-2 bg-slate-800/50 rounded-lg py-2 px-4 text-yellow-400 font-bold text-center">High Score: 0</p>
-                </div>
-            </div>
+  <!-- HOME -->
+  <section id="home" class="enter">
+    <div class="panel pad">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px">
+        <div>
+          <p class="eyebrow">Case File · Classified</p>
+          <h1 class="brand">SpellSleuth</h1>
+          <p class="muted" style="margin:.5rem 0 0; max-width:38ch">Every word bank hides an imposter. Inspect the evidence and flag the correct spelling before the clock runs out.</p>
         </div>
-
-        <!-- Game Screen -->
-        <div id="game-screen" class="hidden">
-            <div class="game-card relative rounded-2xl p-6 md:p-8 shadow-2xl">
-                <button class="home-button absolute top-4 left-4 btn text-2xl p-1 rounded-full hover:bg-slate-700 leading-none">🏠</button>
-                <div class="flex justify-between items-center mb-2">
-                    <div id="lives-container" class="flex space-x-1"></div>
-                    <div class="text-right">
-                        <p id="level-counter" class="text-lg font-bold">Level 1/10</p>
-                        <p id="xp-display" class="text-lg font-bold text-cyan-400">XP: 0</p>
-                    </div>
-                </div>
-                <div class="w-full bg-slate-700 rounded-full h-2.5 mb-4"><div id="timer-bar" class="bg-cyan-400 h-2.5 rounded-full timer-bar"></div></div>
-                <p id="mission-title" class="text-center text-sm font-semibold text-cyan-400 uppercase tracking-wider mb-2">Mission Briefing</p>
-                <div class="bg-slate-800/50 p-6 rounded-lg mb-4 min-h-[100px] flex items-center justify-center">
-                    <h2 id="question-text" class="text-2xl md:text-3xl font-bold text-center">Which spelling is correct?</h2>
-                </div>
-                <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4"></div>
-                <div class="flex gap-4 mb-4">
-                    <div class="flex-grow">
-                        <div class="flex justify-between items-center mb-1">
-                            <span class="text-sm font-semibold text-cyan-400">Intel</span>
-                            <span id="streak-counter-text" class="text-sm font-bold">0 / 4</span>
-                        </div>
-                        <div class="w-full bg-slate-700 rounded-full h-2.5"><div id="streak-bar" class="bg-yellow-400 h-2.5 rounded-full streak-bar-fill" style="width: 0%"></div></div>
-                    </div>
-                    <button id="gadget-button" class="hidden btn bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold p-3 rounded-lg"></button>
-                </div>
-                <div class="min-h-[120px]">
-                    <div id="feedback-container" class="hidden text-center p-3 rounded-lg bg-slate-800/50 mb-4" aria-live="polite">
-                        <p id="feedback-text" class="text-lg font-semibold mb-1"></p>
-                        <p id="rule-text" class="text-slate-300"></p>
-                    </div>
-                    <button id="next-button" class="hidden btn w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg shadow-lg">Next</button>
-                </div>
-            </div>
+        <div style="text-align:center">
+          <div id="home-avatar" style="font-size:56px; line-height:1; filter:drop-shadow(0 6px 18px rgba(244,183,64,.4))">🕵️</div>
+          <button id="btn-settings" class="btn iconbtn btn-ghost" title="Settings" style="margin-top:8px">⚙️</button>
         </div>
-        
-        <!-- Interlude Screen -->
-        <div id="interlude-screen" class="hidden text-center">
-            <div class="game-card relative rounded-2xl p-8 md:p-12 shadow-2xl">
-                <button class="home-button absolute top-4 left-4 btn text-2xl p-1 rounded-full hover:bg-slate-700 leading-none">🏠</button>
-                <h2 class="text-2xl md:text-3xl font-black text-yellow-400 mb-2">SYSTEM OVERRIDE</h2>
-                <p id="interlude-instruction" class="text-slate-300 mb-4"></p>
-                <div class="w-full bg-slate-700 rounded-full h-2.5 mb-4"><div id="interlude-timer-bar" class="bg-yellow-400 h-2.5 rounded-full timer-bar"></div></div>
-                <div id="scramble-mode">
-                    <div id="scrambled-word" class="text-4xl font-bold tracking-widest bg-slate-800/50 p-4 rounded-lg mb-2"></div>
-                </div>
-                 <div id="typing-mode" class="hidden">
-                    <div id="word-to-type" class="text-4xl font-bold tracking-widest p-4 rounded-lg mb-2"></div>
-                </div>
-                <p id="interlude-clue" class="text-slate-400 italic mb-4 min-h-[2.5rem]"></p>
-                <input type="text" id="interlude-input" class="w-full text-center bg-slate-700 text-white text-2xl p-3 rounded-lg border-2 border-slate-600 focus:border-cyan-400 focus:outline-none mb-4" placeholder="Type your answer...">
-                <button id="submit-interlude-button" class="btn w-full bg-yellow-500 hover:bg-yellow-400 text-slate-900 font-bold py-3 px-8 rounded-lg text-lg shadow-lg">Submit</button>
-                <p id="interlude-feedback" class="mt-4 h-6" aria-live="polite"></p>
-            </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:9px">
+        <span id="home-rank" class="hud" style="color:var(--badge); font-size:18px; font-weight:700">Agent · Level 1</span>
+        <span id="home-xp" class="mono muted" style="font-size:13px">0 / 100 XP</span>
+      </div>
+      <div class="meter"><span id="home-xp-bar" class="fill-badge" style="width:0%"></span></div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:16px">
+        <span class="chip"><span class="k">Best</span> <b id="home-best">0</b></span>
+        <span class="chip"><span class="k">Intel</span> <b id="home-intel">0</b></span>
+        <span class="chip"><span class="k">Solved</span> <b id="home-solved">0</b></span>
+        <span class="chip"><span class="k">Mastered</span> <b id="home-mastered">0</b></span>
+        <span class="chip"><span class="k">Gadget</span> <b id="home-gadget">None</b></span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr; gap:12px; margin-top:22px">
+        <button id="btn-start" class="btn btn-primary" style="padding:16px; font-size:18px">▶  Begin Investigation</button>
+        <button id="btn-review" class="btn btn-decode" style="padding:14px">🎯 Field Review <span id="review-count" class="mono" style="opacity:.8"></span></button>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+          <button id="btn-qbranch" class="btn">🛰 Q-Branch</button>
+          <button id="btn-badges" class="btn">🏅 Badges</button>
         </div>
-
-        <!-- NEW: Enemy Agent Screen -->
-        <div id="enemy-agent-screen" class="hidden text-center">
-            <div class="game-card relative rounded-2xl p-8 md:p-12 shadow-2xl">
-                <button class="home-button absolute top-4 left-4 btn text-2xl p-1 rounded-full hover:bg-slate-700 leading-none">🏠</button>
-                <h2 class="text-2xl md:text-3xl font-black text-red-500 mb-2">ENEMY AGENT SPOTTED!</h2>
-                <p class="text-slate-300 mb-4">Identify the word's spelling status before it fully decrypts!</p>
-                <div class="w-full bg-slate-700 rounded-full h-2.5 mb-4"><div id="enemy-agent-timer-bar" class="bg-red-500 h-2.5 rounded-full timer-bar"></div></div>
-                <div id="decrypting-word-container" class="text-4xl font-bold tracking-widest bg-slate-800/50 p-6 rounded-lg mb-6 min-h-[80px]"></div>
-                <div class="grid grid-cols-2 gap-4">
-                    <button id="is-correct-button" class="btn bg-green-600 hover:bg-green-500 text-white font-bold py-4 rounded-lg text-xl shadow-lg">Correct Spelling</button>
-                    <button id="is-incorrect-button" class="btn bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-lg text-xl shadow-lg">Incorrect Spelling</button>
-                </div>
-                 <p id="enemy-agent-feedback" class="mt-4 h-6 font-bold" aria-live="polite"></p>
-            </div>
-        </div>
-        
-        <!-- Boss Screen -->
-        <div id="boss-screen" class="hidden">
-             <div class="game-card relative rounded-2xl p-6 md:p-8 shadow-2xl">
-                <button class="home-button absolute top-4 left-4 btn text-2xl p-1 rounded-full hover:bg-slate-700 leading-none">🏠</button>
-                <h2 class="text-center text-3xl font-black text-red-500 mb-4">FINAL BATTLE</h2>
-                <div class="relative h-48 md:h-64 flex items-center justify-center overflow-hidden">
-                    <div id="player-sprite" class="absolute left-4 md:left-8 bottom-4 text-5xl md:text-7xl transition-transform duration-300">🕵️</div>
-                    <div id="boss-sprite" class="absolute right-4 md:right-8 bottom-4 text-6xl md:text-8xl transition-transform duration-300">👻</div>
-                </div>
-                <div class="flex justify-between gap-4">
-                    <div class="w-1/2">
-                        <p class="font-bold text-cyan-400 mb-1">AGENT HP</p>
-                        <div class="w-full bg-slate-700 rounded-full h-4 border border-slate-600"><div id="player-hp-bar" class="bg-cyan-400 h-full rounded-full hp-bar-fill"></div></div>
-                    </div>
-                    <div class="w-1/2">
-                        <p class="font-bold text-red-500 mb-1 text-right">SPECTRE HP</p>
-                        <div class="w-full bg-slate-700 rounded-full h-4 border border-slate-600"><div id="boss-hp-bar" class="bg-red-500 h-full rounded-full hp-bar-fill"></div></div>
-                    </div>
-                </div>
-                <div class="text-center mt-2" id="gadget-battle-log"></div>
-                <div id="battle-log" class="text-center mt-4 min-h-[100px] flex items-center justify-center" aria-live="polite"><p id="battle-log-text" class="text-xl font-bold text-yellow-400"></p></div>
-                <div id="battle-question-section" class="hidden"><h3 id="battle-question-text" class="text-center text-2xl font-bold mb-4"></h3><div id="battle-options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div></div>
-                <div id="post-battle-section" class="hidden mt-6">
-                    <div class="text-center mb-6">
-                        <h3 class="text-2xl font-bold text-cyan-400">Mission XP: <span id="mission-xp-gain">0</span></h3>
-                    </div>
-                    <div id="review-section" class="hidden text-left mb-6"><h3 class="text-xl font-bold text-yellow-400 mb-3 text-center">Mission Debriefing: Words to Review</h3><div id="missed-words-list" class="bg-slate-800/50 p-4 rounded-lg max-h-48 overflow-y-auto"></div></div>
-                    <button id="return-home-button" class="btn w-full bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold py-4 px-8 rounded-lg text-xl shadow-lg">Return to Home</button>
-                </div>
-            </div>
-        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px">
+        <p class="eyebrow" style="color:var(--badge); margin:0">Custom Missions</p>
+        <button id="btn-new-list" class="btn btn-ghost" style="padding:8px 12px; font-size:13px">+ New list</button>
+      </div>
+      <div id="custom-lists" style="display:flex; flex-direction:column; gap:8px"></div>
     </div>
+  </section>
 
-    <!-- Achievement Toast Notification -->
-    <div id="achievement-toast-container" class="fixed bottom-5 right-5 w-80 z-50"></div>
-
-    <!-- Modals (Achievements, Q-Branch) -->
-    <div id="achievements-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-        <div class="game-card w-full max-w-lg rounded-2xl p-6 md:p-8 shadow-2xl relative">
-            <button id="close-achievements-button" class="absolute top-4 right-4 text-3xl text-slate-400 hover:text-white">&times;</button>
-            <h2 class="text-3xl font-black text-yellow-400 text-center mb-6">Agent Badges</h2>
-            <div id="achievements-list" class="space-y-4 max-h-[70vh] overflow-y-auto pr-2"></div>
+  <!-- PLAY -->
+  <section id="play" class="hidden">
+    <div class="panel pad" id="play-panel">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:12px">
+        <button class="btn iconbtn btn-ghost home-btn" title="Abort to HQ">🏠</button>
+        <div id="lives" style="display:flex; gap:5px"></div>
+        <div style="text-align:right">
+          <div id="mission-count" class="mono muted" style="font-size:12px">Case 1 / 6</div>
+          <div class="hud" style="color:var(--cipher); font-weight:700"><span class="mono">XP</span> <span id="run-xp">0</span></div>
         </div>
-    </div>
-    
-    <div id="q-branch-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
-        <div class="game-card w-full max-w-2xl rounded-2xl p-6 md:p-8 shadow-2xl relative">
-            <button id="close-q-branch-button" class="absolute top-4 right-4 text-3xl text-slate-400 hover:text-white">&times;</button>
-            <h2 class="text-3xl font-black text-amber-400 text-center mb-2">Q-Branch</h2>
-            <p class="text-center text-slate-300 mb-6">Customize your agent and equip a gadget for your next mission.</p>
-            
-            <h3 class="text-xl font-bold text-cyan-400 mb-3">Select Avatar</h3>
-            <div id="avatar-selection" class="grid grid-cols-4 sm:grid-cols-6 gap-4 bg-slate-800/50 p-4 rounded-lg mb-6"></div>
-
-            <h3 class="text-xl font-bold text-cyan-400 mb-3">Equip Gadget (Costs Intel)</h3>
-            <div id="gadget-selection" class="space-y-3"></div>
-
+      </div>
+      <div class="meter timer" style="margin-bottom:14px"><span id="timer" class="fill-cipher" style="width:100%"></span></div>
+      <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin:0 0 12px">
+        <p id="mission-name" class="eyebrow" style="text-align:center; color:var(--badge); margin:0">Mission</p>
+        <span id="q-tier" class="tierbadge t1">Tier 1</span>
+      </div>
+      <div class="readout" style="margin-bottom:16px">
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+        <span class="scan"></span>
+        <p id="prompt" class="prompt">Which spelling is correct?</p>
+        <span id="verdict" class="stamp"></span>
+      </div>
+      <div id="options" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px"></div>
+      <div style="display:flex; gap:12px; align-items:flex-end; margin-bottom:6px">
+        <div style="flex:1">
+          <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+            <span class="tiptag">Intel streak</span>
+            <span id="streak-text" class="mono muted" style="font-size:12px">0 / 4</span>
+          </div>
+          <div class="meter slim"><span id="streak-bar" class="fill-badge" style="width:0%"></span></div>
         </div>
+        <button id="btn-gadget" class="btn hidden" style="white-space:nowrap"></button>
+      </div>
+      <div style="min-height:118px; margin-top:14px">
+        <div id="feedback" class="feedback hidden" aria-live="polite">
+          <p id="feedback-title" style="margin:0 0 4px; font-weight:800"></p>
+          <p style="margin:0; font-size:14px" class="muted"><span class="tiptag">Tip · </span><span id="feedback-tip"></span></p>
+        </div>
+        <button id="btn-next" class="btn btn-primary hidden" style="width:100%; margin-top:12px; padding:14px">Next lead  →</button>
+      </div>
     </div>
-    
-    <script>
-        window.addEventListener('load', () => {
-            // --- DOM Elements ---
-            const startScreen = document.getElementById('start-screen'), gameScreen = document.getElementById('game-screen'), interludeScreen = document.getElementById('interlude-screen'), bossScreen = document.getElementById('boss-screen'), enemyAgentScreen = document.getElementById('enemy-agent-screen');
-            const startButton = document.getElementById('start-button'), nextButton = document.getElementById('next-button'), returnHomeButton = document.getElementById('return-home-button'), submitInterludeButton = document.getElementById('submit-interlude-button');
-            const highScoreDisplay = document.getElementById('high-score-display'), xpDisplay = document.getElementById('xp-display'), levelCounter = document.getElementById('level-counter'), missionTitle = document.getElementById('mission-title'), questionText = document.getElementById('question-text'), optionsContainer = document.getElementById('options-container'), feedbackContainer = document.getElementById('feedback-container'), feedbackText = document.getElementById('feedback-text'), ruleText = document.getElementById('rule-text'), livesContainer = document.getElementById('lives-container');
-            const timerBar = document.getElementById('timer-bar'), streakBar = document.getElementById('streak-bar'), streakCounterText = document.getElementById('streak-counter-text');
-            const gadgetButton = document.getElementById('gadget-button');
-            const interludeInstruction = document.getElementById('interlude-instruction'), interludeTimerBar = document.getElementById('interlude-timer-bar'), interludeClue = document.getElementById('interlude-clue'), interludeInput = document.getElementById('interlude-input'), interludeFeedback = document.getElementById('interlude-feedback');
-            const scrambleMode = document.getElementById('scramble-mode'), scrambledWord = document.getElementById('scrambled-word'), typingMode = document.getElementById('typing-mode'), wordToType = document.getElementById('word-to-type');
-            const enemyAgentTimerBar = document.getElementById('enemy-agent-timer-bar'), decryptingWordContainer = document.getElementById('decrypting-word-container'), isCorrectButton = document.getElementById('is-correct-button'), isIncorrectButton = document.getElementById('is-incorrect-button'), enemyAgentFeedback = document.getElementById('enemy-agent-feedback');
-            const playerSprite = document.getElementById('player-sprite'), bossSprite = document.getElementById('boss-sprite'), playerHpBar = document.getElementById('player-hp-bar'), bossHpBar = document.getElementById('boss-hp-bar'), gadgetBattleLog = document.getElementById('gadget-battle-log');
-            const battleLogText = document.getElementById('battle-log-text'), postBattleSection = document.getElementById('post-battle-section'), reviewSection = document.getElementById('review-section'), missedWordsList = document.getElementById('missed-words-list');
-            const battleQuestionSection = document.getElementById('battle-question-section'), battleQuestionText = document.getElementById('battle-question-text'), battleOptionsContainer = document.getElementById('battle-options-container');
-            const playerLevelDisplay = document.getElementById('player-level'), playerXpDisplay = document.getElementById('player-xp'), xpBarFill = document.getElementById('xp-bar-fill'), missionXpGain = document.getElementById('mission-xp-gain');
-            const achievementsButton = document.getElementById('achievements-button'), achievementsModal = document.getElementById('achievements-modal'), closeAchievementsButton = document.getElementById('close-achievements-button'), achievementsList = document.getElementById('achievements-list'), achievementToastContainer = document.getElementById('achievement-toast-container');
-            const qBranchButton = document.getElementById('q-branch-button'), qBranchModal = document.getElementById('q-branch-modal'), closeQBranchButton = document.getElementById('close-q-branch-button'), avatarSelection = document.getElementById('avatar-selection'), gadgetSelection = document.getElementById('gadget-selection');
-            const startScreenAvatar = document.getElementById('start-screen-avatar');
-            const homeButtons = document.querySelectorAll('.home-button');
+  </section>
 
-            // --- Game Config & Data ---
-            const AVATARS = { '🕵️': 1, '👩‍🚀': 2, '🥷': 4, '👩‍💻': 6, '🧑‍🔬': 8, '🥸': 10 };
-            const GADGETS = {
-                decoy_deflector: { name: "Decoy Deflector", desc: "Eliminates one wrong answer.", cost: 1, icon: '📡' },
-                time_freeze: { name: "Time-Freeze Watch", desc: "Adds 5 seconds to the timer.", cost: 2, icon: '⏱️' },
-                spectre_stunner: { name: "Spectre Stunner", desc: "Deals 1 extra damage in the final battle.", cost: 3, icon: '💥' }
-            };
-            const ACHIEVEMENTS = { first_mission: { name: "Rookie Agent", desc: "Complete your first mission.", unlocked: false }, hot_streak: { name: "Hot Streak", desc: "Correctly answer 5 words in a row.", unlocked: false }, perfect_mission: { name: "Flawless Execution", desc: "Finish a mission without losing any lives.", unlocked: false }, comeback_kid: { name: "Down to the Wire", desc: "Win the final battle with only 1 HP remaining.", unlocked: false }, word_warrior: { name: "Word Warrior", desc: "Reach Agent Level 5.", unlocked: false }, spelling_master: { name: "Spelling Master", desc: "Reach Agent Level 10.", unlocked: false }, gadget_master: { name: "Gadget Master", desc: "Successfully use 3 gadgets.", unlocked: false } };
-            const GAME_DATA = [ { levelName: "Double Agent Consonants", questions: [ { word: "accommodate", decoys: ["acommodate", "accomodate", "acomodate"], rule: "Two C's, two M's. Remember: 'All Cows Moo Moo'.", clue: "To provide lodging or sufficient space for." }, { word: "occurrence", decoys: ["occurence", "occurrance", "ocurrence"], rule: "Double C, double R. From 'occur'.", clue: "An incident or event." }, { word: "address", decoys: ["adress", "addres", "addess"], rule: "Think 'add a dress' to your address.", clue: "The particulars of a place where someone lives." }, { word: "necessary", decoys: ["neccessary", "necesary", "neccesary"], rule: "One collar (c), two sleeves (s).", clue: "Needed to be done, achieved, or present; essential." }, { word: "committee", decoys: ["comittee", "commitee", "comitee"], rule: "Double M, double T, double E.", clue: "A group of people appointed for a specific function." } ]}, { levelName: "The Ghost Protocol", questions: [ { word: "subtle", decoys: ["suttle", "subble", "sutle"], rule: "The 'b' is silent, a ghost in the word.", clue: "So delicate or precise as to be difficult to analyze." }, { word: "receipt", decoys: ["reciept", "receit", "recit"], rule: "The 'p' is silent, from its Latin root.", clue: "A written statement that money has been paid." }, { word: "doubt", decoys: ["dout", "dowt", "dought"], rule: "The 'b' in doubt is silent.", clue: "A feeling of uncertainty or lack of conviction." }, { word: "column", decoys: ["colum", "collumn", "colunm"], rule: "The final 'n' is silent.", clue: "A vertical pillar or a vertical division of a page." }, { word: "knowledge", decoys: ["knowlege", "knowlidge", "knowlege"], rule: "The 'k' is silent, but you 'know' it's there.", clue: "Facts, information, and skills acquired through experience." } ]}, { levelName: "The -ie/-ei Deception", questions: [ { word: "believe", decoys: ["beleive", "belive", "beleve"], rule: "Follows the 'i before e' rule.", clue: "To accept something as true; feel sure of the truth of." }, { word: "receive", decoys: ["recieve", "reseive", "reseve"], rule: "'i before e, except after c'.", clue: "To be given, presented with, or paid something." }, { word: "ceiling", decoys: ["cieling", "ceeling", "cieleng"], rule: "'i before e, except after c'.", clue: "The upper interior surface of a room." }, { word: "seize", decoys: ["sieze", "seeze", "sieze"], rule: "A rebel word! An exception to the rule.", clue: "To take hold of suddenly and forcibly." }, { word: "weird", decoys: ["wierd", "weired", "wiered"], rule: "'Weird' is a famous exception to the 'i before e' rule.", clue: "Suggesting something strange or supernatural." } ]}, { levelName: "Vowel Infiltration", questions: [ { word: "separate", decoys: ["seperate", "seporate", "seprate"], rule: "There's 'a rat' in sep-A-RAT-e.", clue: "To cause to move or be apart." }, { word: "definitely", decoys: ["definately", "definitly", "definitley"], rule: "It comes from 'finite'. Def-I-NITE-ly.", clue: "Without doubt; certainly." }, { word: "desperate", decoys: ["desparate", "despirate", "despret"], rule: "The middle vowel is an 'e'.", clue: "Feeling a hopeless sense that a situation is impossible." }, { word: "privilege", decoys: ["priviledge", "privilage", "privelege"], rule: "Two 'i's and two 'e's.", clue: "A special right or advantage available to a person or group." }, { word: "cemetery", decoys: ["cemetary", "cematery", "cemetry"], rule: "All 'e's. A place of rest-E-E-E.", clue: "A burial ground; a graveyard." } ]}, { levelName: "The Doppelgänger Directive", questions: [ { sentence: "The team celebrated when _____ team won.", word: "their", decoys: ["there", "they're"], rule: "'Their' shows possession. The team belongs to them.", clue: "Belonging to or associated with the people previously mentioned." }, { sentence: "The cat licked _____ paws clean.", word: "its", decoys: ["it's"], rule: "'Its' is possessive. 'It's' = it is.", clue: "Belonging to or associated with a thing." }, { sentence: "This book is better _____ the last one.", word: "than", decoys: ["then"], rule: "'Than' is for comparison. 'Then' is for time.", clue: "Used to introduce the second element in a comparison." }, { sentence: "The _____ of the school is your pal.", word: "principal", decoys: ["principle"], rule: "The princi-PAL is your pal. A princi-PLE is a rule.", clue: "The person with the highest authority in a school." }, { sentence: "I need new _____ for my printer.", word: "stationery", decoys: ["stationary"], rule: "Station-E-ry is for Envelopes and pap-E-r.", clue: "Writing materials like paper and envelopes." } ]}, { levelName: "Suffix Sabotage", questions: [ { word: "disappearance", decoys: ["disapearance", "disappearence", "disappearrance"], rule: "Start with 'disappear' and add '-ance'.", clue: "The action of ceasing to be visible." }, { word: "beginning", decoys: ["begining", "begining", "beggining"], rule: "Double the 'n' before adding '-ing'.", clue: "The point in time or space at which something starts." }, { word: "argument", decoys: ["arguement", "argumint", "arguemant"], rule: "You lose the 'e' from 'argue' when you make an argument.", clue: "An exchange of diverging or opposite views." }, { word: "noticeable", decoys: ["noticable", "noticible", "noticeble"], rule: "Keep the 'e' in 'notice' to keep the 'c' sound soft.", clue: "Easily seen or observed." }, { word: "judgment", decoys: ["judgement", "judgemint", "judgmant"], rule: "Drop the 'e' from 'judge' before adding '-ment'.", clue: "The ability to make considered decisions." } ]}, { levelName: "The Academic Agenda", questions: [ { word: "conscience", decoys: ["conscence", "concience", "consience"], rule: "Think 'con' (with) + 'science'. Your inner knowledge.", clue: "An inner feeling or voice acting as a guide to right and wrong." }, { word: "independent", decoys: ["independant", "indipendent", "indepandent"], rule: "All 'e's at the end. 'depend-ENT'.", clue: "Free from outside control; not depending on another." }, { word: "restaurant", decoys: ["restaraunt", "resturant", "restraunt"], rule: "Remember the 'au' in the middle.", clue: "A place where people pay to sit and eat meals." }, { word: "environment", decoys: ["enviroment", "envirenment", "enviroment"], rule: "Don't forget the 'n' after 'o': en-vi-RON-ment.", clue: "The surroundings or conditions in which a person lives." }, { word: "guarantee", decoys: ["garantee", "guarentee", "garuntee"], rule: "Starts with 'gua' like 'guard'.", clue: "A formal promise or assurance." } ]}, { levelName: "The Suffix Switcheroo", questions: [ { word: "responsible", decoys: ["responsable", "responcible", "responcable"], rule: "Words ending in '-spond' or '-sponse' usually take '-ible'.", clue: "Having an obligation to do something." }, { word: "incredible", decoys: ["incredable", "incredibble", "incredable"], rule: "From the Latin root 'credibilis'.", clue: "Difficult or impossible to believe." }, { word: "acceptable", decoys: ["acceptible", "acceptible", "acceptabull"], rule: "If the root is a full word ('accept'), use '-able'.", clue: "Able to be agreed on; suitable." }, { word: "existence", decoys: ["existance", "existince", "existanse"], rule: "Ends with '-ence', not '-ance'.", clue: "The fact or state of living or having objective reality." }, { word: "maintenance", decoys: ["maintainance", "maintenence", "maintanence"], rule: "The main part is 'mainten', then '-ance'.", clue: "The process of preserving a condition or situation." } ]}, { levelName: "The Sneaky Letter Syndicate", questions: [ { word: "mischievous", decoys: ["mischevious", "mischievious", "mischevous"], rule: "It's mis-chiev-ous. Only three syllables.", clue: "Causing or showing a fondness for causing trouble playfully." }, { word: "license", decoys: ["lisence", "licence", "lisense"], rule: "Remember the 'c' and the 's'.", clue: "A permit from an authority to own or use something." }, { word: "acquaintance", decoys: ["aquaintance", "acquaintence", "acquantance"], rule: "Don't forget the 'c' after 'a'.", clue: "A person one knows slightly, but not a close friend." }, { word: "harass", decoys: ["harrass", "haras", "harras"], rule: "One 'r', two 's's.", clue: "To subject to aggressive pressure or intimidation." }, { word: "leisure", decoys: ["liesure", "leasure", "leisur"], rule: "An exception to the 'i before e' rule.", clue: "Free time used for enjoyment." } ]}, { levelName: "Operation: Foreign Agent", questions: [ { word: "liaison", decoys: ["liason", "liazon", "leason"], rule: "A French word with two 'i's.", clue: "Communication or cooperation that facilitates a close working relationship." }, { word: "entrepreneur", decoys: ["entreprenuer", "ontrepreneur", "entrepeneur"], rule: "A French word. The 'pre' and 'neur' parts are often misspelled.", clue: "A person who organizes and operates a business." }, { word: "camouflage", decoys: ["camoflage", "camoflague", "camoflouge"], rule: "Remember the 'ou' in this French word.", clue: "The disguising of military personnel, equipment, and installations." }, { word: "bureaucracy", decoys: ["beurocracy", "buerocracy", "burocracy"], rule: "The 'eau' is a French sound.", clue: "A system of government in which most decisions are made by state officials." }, { word: "chauffeur", decoys: ["chauffer", "chauffuer", "shauffeur"], rule: "Remember the 'ff' and the 'eur' ending.", clue: "A person employed to drive a private or hired car." } ]} ];
-            
-            // --- Game State & Constants ---
-            let playerState;
-            let currentLevelIndex, currentQuestionIndex, currentXp, lives, streak, intel, timerInterval, missedWords, gameDataCopy, correctStreak, tookDamage, equippedGadget, gadgetsUsedCount;
-            const GAME_LIVES = 3, GAME_TIME = 18, STREAK_TARGET = 4, INTERLUDE_TIME = 20, ENEMY_AGENT_TIME = 8;
-            
-            // --- Player & Game Logic ---
-            function getXpForNextLevel(level) { return Math.floor(100 * Math.pow(1.5, level - 1)); }
-            function loadPlayerState() {
-                const savedState = JSON.parse(localStorage.getItem('spellSleuthPlayerState_v2'));
-                const defaultState = {
-                    highScore: 0,
-                    level: 1,
-                    xp: 0,
-                    unlockedAvatars: ['🕵️'],
-                    selectedAvatar: '🕵️',
-                    gadgetsUsed: 0,
-                    achievements: { ...ACHIEVEMENTS }
-                };
-                playerState = { ...defaultState, ...savedState };
-                for (const key in ACHIEVEMENTS) { if (!playerState.achievements[key]) { playerState.achievements[key] = ACHIEVEMENTS[key]; }}
-            }
-            function savePlayerState() { localStorage.setItem('spellSleuthPlayerState_v2', JSON.stringify(playerState)); }
-            
-            function addXp(amount) {
-                currentXp += amount;
-                playerState.xp += amount;
-                let xpForNext = getXpForNextLevel(playerState.level);
-                while (playerState.xp >= xpForNext) {
-                    playerState.level++;
-                    playerState.xp -= xpForNext;
-                    xpForNext = getXpForNextLevel(playerState.level);
-                    unlockAvatars();
-                    document.querySelector('.game-card').classList.add('level-up-flash');
-                    setTimeout(() => document.querySelector('.game-card').classList.remove('level-up-flash'), 1500);
-                }
-                updatePlayerUI();
-                checkAchievement('word_warrior'); checkAchievement('spelling_master');
-            }
+  <!-- INTERLUDE -->
+  <section id="interlude" class="hidden">
+    <div class="panel pad" style="text-align:center">
+      <button class="btn iconbtn btn-ghost home-btn" style="position:absolute; top:18px; left:18px">🏠</button>
+      <p class="eyebrow" style="color:var(--badge)">Encrypted Transmission</p>
+      <h2 class="hud" style="font-size:26px; margin:.3rem 0 4px">SYSTEM OVERRIDE</h2>
+      <p id="interlude-instr" class="muted" style="margin:0 0 14px"></p>
+      <div class="meter timer" style="margin-bottom:18px"><span id="interlude-timer" class="fill-badge" style="width:100%"></span></div>
+      <div class="readout" style="margin-bottom:12px">
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+        <div id="interlude-word" class="cipherword"></div>
+      </div>
+      <p id="interlude-clue" class="muted" style="font-style:italic; min-height:2.4em; margin:6px 0 14px"></p>
+      <input id="interlude-input" class="field" placeholder="Decode the word…" autocomplete="off" autocapitalize="off" spellcheck="false" style="margin-bottom:14px">
+      <button id="btn-interlude" class="btn btn-primary" style="width:100%; padding:14px">Transmit</button>
+      <p id="interlude-feedback" class="hud" style="margin-top:14px; min-height:1.4em; font-weight:700"></p>
+    </div>
+  </section>
 
-            function goHome() {
-                clearInterval(timerInterval);
-                gameScreen.classList.add('hidden');
-                interludeScreen.classList.add('hidden');
-                enemyAgentScreen.classList.add('hidden');
-                bossScreen.classList.add('hidden');
-                startScreen.classList.remove('hidden');
-                updatePlayerUI();
-            }
+  <!-- ENEMY -->
+  <section id="enemy" class="hidden">
+    <div class="panel pad" style="text-align:center">
+      <button class="btn iconbtn btn-ghost home-btn" style="position:absolute; top:18px; left:18px">🏠</button>
+      <p class="eyebrow" style="color:var(--alert)">Signal Intercept</p>
+      <h2 class="hud" style="font-size:26px; margin:.3rem 0 4px; color:var(--alert)">ENEMY AGENT SPOTTED</h2>
+      <p class="muted" style="margin:0 0 14px">Is the intercepted word spelled correctly? Decide before it fully decrypts.</p>
+      <div class="meter timer" style="margin-bottom:18px"><span id="enemy-timer" class="fill-alert" style="width:100%"></span></div>
+      <div class="readout" style="margin-bottom:18px; min-height:110px">
+        <span class="corner c1" style="border-color:var(--alert)"></span><span class="corner c2" style="border-color:var(--alert)"></span>
+        <span class="corner c3" style="border-color:var(--alert)"></span><span class="corner c4" style="border-color:var(--alert)"></span>
+        <div id="enemy-word" class="cipherword" style="color:var(--alert)"></div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+        <button id="btn-legit" class="btn btn-decode" style="padding:16px; font-size:16px">✓ Correctly spelled</button>
+        <button id="btn-fake" class="btn btn-danger" style="padding:16px; font-size:16px">✗ Misspelled</button>
+      </div>
+      <p id="enemy-feedback" class="hud" style="margin-top:16px; min-height:1.4em; font-weight:700"></p>
+    </div>
+  </section>
 
-            function unlockAvatars() {
-                for (const avatar in AVATARS) {
-                    if (playerState.level >= AVATARS[avatar] && !playerState.unlockedAvatars.includes(avatar)) {
-                        playerState.unlockedAvatars.push(avatar);
-                    }
-                }
-            }
+  <!-- PROOFREAD -->
+  <section id="proof" class="hidden">
+    <div class="panel pad" style="text-align:center">
+      <button class="btn iconbtn btn-ghost home-btn" style="position:absolute; top:18px; left:18px">🏠</button>
+      <p class="eyebrow" style="color:var(--cipher)">Field Report · Redaction</p>
+      <h2 class="hud" style="font-size:26px; margin:.3rem 0 4px">PROOFREAD THE INTEL</h2>
+      <p class="muted" style="margin:0 0 14px">One word in this report is misspelled. Tap the imposter.</p>
+      <div class="meter timer" style="margin-bottom:18px"><span id="proof-timer" class="fill-cipher" style="width:100%"></span></div>
+      <div class="readout" style="min-height:120px; margin-bottom:14px">
+        <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+        <div id="proof-sentence" class="proof-sentence"></div>
+      </div>
+      <div id="proof-feedback" class="feedback hidden" style="text-align:left">
+        <p id="proof-fb-title" style="margin:0 0 4px; font-weight:800"></p>
+        <p style="margin:0; font-size:14px" class="muted"><span class="tiptag">Tip · </span><span id="proof-fb-tip"></span></p>
+      </div>
+    </div>
+  </section>
 
-            function shuffleArray(array) { for (let i = array.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [array[i], array[j]] = [array[j], array[i]]; } return array; }
+  <!-- BOSS -->
+  <section id="boss" class="hidden">
+    <div class="panel pad">
+      <button class="btn iconbtn btn-ghost home-btn" style="position:absolute; top:18px; left:18px">🏠</button>
+      <p class="eyebrow" style="text-align:center; color:var(--alert)">Final Confrontation</p>
+      <h2 class="hud" style="text-align:center; font-size:28px; color:var(--alert); margin:.3rem 0 14px">THE SPELLING SPECTRE</h2>
+      <div class="arena">
+        <div id="p-fighter" class="fighter p">🕵️</div>
+        <div id="b-fighter" class="fighter b">👻</div>
+      </div>
+      <div style="display:flex; gap:14px; margin-top:14px">
+        <div style="flex:1">
+          <div class="tiptag" style="color:var(--cipher)">Agent HP</div>
+          <div class="meter" style="margin-top:5px"><span id="p-hp" class="fill-cipher" style="width:100%"></span></div>
+        </div>
+        <div style="flex:1">
+          <div class="tiptag" style="color:var(--alert); text-align:right">Spectre HP</div>
+          <div class="meter" style="margin-top:5px"><span id="b-hp" class="fill-alert" style="width:100%"></span></div>
+        </div>
+      </div>
+      <p id="gadget-log" class="mono" style="text-align:center; color:var(--badge); min-height:1.2em; margin:10px 0 0; font-size:13px"></p>
+      <div id="battle-log" style="text-align:center; min-height:52px; display:grid; place-items:center; margin:6px 0">
+        <p id="battle-log-text" class="hud" style="font-size:20px; font-weight:700; color:var(--badge)"></p>
+      </div>
+      <div id="battle-q" class="hidden">
+        <p id="battle-prompt" class="prompt" style="text-align:center; font-size:20px; margin:0 0 14px"></p>
+        <div id="battle-options" style="display:grid; grid-template-columns:1fr 1fr; gap:12px"></div>
+      </div>
+      <div id="debrief" class="hidden" style="margin-top:18px">
+        <div style="text-align:center; margin-bottom:16px">
+          <p class="eyebrow" style="color:var(--cipher)">Mission Debrief</p>
+          <p class="hud" style="font-size:22px; margin:6px 0 0">Total XP earned: <b id="debrief-xp" style="color:var(--badge)">0</b></p>
+          <p id="debrief-intel" class="mono muted" style="margin:4px 0 0; font-size:13px"></p>
+        </div>
+        <div id="review" class="hidden">
+          <p class="tiptag" style="text-align:center; display:block; margin-bottom:8px">Case notes · words to review</p>
+          <div id="review-list" style="max-height:210px; overflow:auto; display:flex; flex-direction:column; gap:8px"></div>
+        </div>
+        <button id="btn-home" class="btn btn-primary" style="width:100%; margin-top:18px; padding:15px">Return to HQ</button>
+      </div>
+    </div>
+  </section>
+</div>
 
-            function startGame() {
-                startScreen.classList.add('hidden');
-                bossScreen.classList.add('hidden');
-                postBattleSection.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-                
-                currentLevelIndex = 0; currentQuestionIndex = 0; currentXp = 0; lives = GAME_LIVES; streak = 0; intel = 1; missedWords = []; correctStreak = 0; tookDamage = false; gadgetsUsedCount = 0;
-                
-                gameDataCopy = JSON.parse(JSON.stringify(GAME_DATA));
-                gameDataCopy.forEach(level => shuffleArray(level.questions));
-                shuffleArray(gameDataCopy);
+<div id="toasts"></div>
 
-                updateXpDisplay(); updateLives(); updateStreakAndIntel(); setupGadgetButton(); loadQuestion();
-            }
+<div id="modal-badges" class="modal hidden">
+  <div class="panel pad">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <div><p class="eyebrow" style="color:var(--badge)">Service Record</p><h2 class="hud" style="margin:2px 0 0; font-size:24px">Agent Badges</h2></div>
+      <button class="btn iconbtn btn-ghost close-modal" data-modal="modal-badges">✕</button>
+    </div>
+    <div id="badge-list" style="display:flex; flex-direction:column; gap:10px"></div>
+  </div>
+</div>
 
-            function loadQuestion() {
-                resetQuestionUI();
-                const level = gameDataCopy[currentLevelIndex];
-                const question = level.questions[currentQuestionIndex];
-                
-                levelCounter.textContent = `Level ${currentLevelIndex + 1} / ${gameDataCopy.length}`;
-                missionTitle.textContent = level.levelName;
-                questionText.textContent = question.sentence ? question.sentence.replace('_____', '...') : `Which spelling is correct?`;
-                
-                const options = shuffleArray([...question.decoys, question.word]);
-                options.forEach(option => {
-                    const button = document.createElement('button');
-                    button.textContent = option;
-                    button.className = 'btn w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 font-semibold py-4 px-4 rounded-lg text-lg';
-                    button.onclick = () => selectAnswer(option);
-                    optionsContainer.appendChild(button);
-                });
-                startTimer(GAME_TIME, timerBar, handleTimeout);
-            }
+<div id="modal-qbranch" class="modal hidden">
+  <div class="panel pad">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+      <div><p class="eyebrow" style="color:var(--badge)">Requisitions</p><h2 class="hud" style="margin:2px 0 0; font-size:24px">Q-Branch</h2></div>
+      <button class="btn iconbtn btn-ghost close-modal" data-modal="modal-qbranch">✕</button>
+    </div>
+    <p class="muted" style="margin:0 0 4px; font-size:14px">Spend Intel earned in the field. You hold <b id="qb-intel" style="color:var(--badge)">0</b> Intel.</p>
+    <div class="divider"></div>
+    <p class="tiptag" style="color:var(--cipher)">Field disguise · unlocks by rank</p>
+    <div id="avatars" style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin:10px 0 20px"></div>
+    <p class="tiptag" style="color:var(--cipher)">Equip a gadget · one per mission</p>
+    <div id="gadgets" style="display:flex; flex-direction:column; gap:10px; margin-top:10px"></div>
+  </div>
+</div>
 
-            function selectAnswer(selectedOption) {
-                clearInterval(timerInterval);
-                timerBar.style.transition = 'none';
-                const question = gameDataCopy[currentLevelIndex].questions[currentQuestionIndex];
-                const isCorrect = selectedOption === question.word;
-                feedbackContainer.classList.remove('hidden');
-                ruleText.textContent = `Spelling Tip: ${question.rule}`;
+<div id="modal-settings" class="modal hidden">
+  <div class="panel pad" style="max-width:420px">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+      <h2 class="hud" style="margin:0; font-size:22px">Settings</h2>
+      <button class="btn iconbtn btn-ghost close-modal" data-modal="modal-settings">✕</button>
+    </div>
+    <label class="gadget" style="cursor:pointer"><span>🔊 Sound effects</span><input type="checkbox" id="set-sound" style="width:20px; height:20px"></label>
+    <label class="gadget" style="cursor:pointer; margin-top:10px"><span>🎞 Reduce motion</span><input type="checkbox" id="set-motion" style="width:20px; height:20px"></label>
+    <div class="divider"></div>
+    <button id="btn-reset" class="btn btn-danger" style="width:100%">Reset all progress</button>
+  </div>
+</div>
 
-                if (isCorrect) {
-                    addXp(10); streak++; correctStreak++;
-                    feedbackText.textContent = "Correct! +10 XP"; feedbackText.style.color = '#22c55e';
-                    if (streak >= STREAK_TARGET) { intel++; streak = 0; }
-                    checkAchievement('hot_streak');
-                } else {
-                    lives--; streak = 0; correctStreak = 0; tookDamage = true;
-                    feedbackText.textContent = `Incorrect. The answer is "${question.word}".`; feedbackText.style.color = '#ef4444';
-                    updateLives();
-                    if (!missedWords.some(item => item.word === question.word)) { missedWords.push(question); }
-                }
-                updateXpDisplay(); updateStreakAndIntel(); highlightAnswers(selectedOption, question.word);
-                
-                if (lives <= 0) { setTimeout(() => endGame(true), 2000); } 
-                else { nextButton.classList.remove('hidden'); }
-            }
+<div id="modal-list" class="modal hidden">
+  <div class="panel pad">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px">
+      <div><p class="eyebrow" style="color:var(--badge)">Build a case</p><h2 class="hud" style="margin:2px 0 0; font-size:24px">New Custom Mission</h2></div>
+      <button class="btn iconbtn btn-ghost close-modal" data-modal="modal-list">✕</button>
+    </div>
+    <p class="muted" style="font-size:14px; margin:0 0 12px">Paste this week's spelling words — one per line. Add a clue with a pipe:
+      <span class="mono" style="color:var(--cipher)">necessary | needed or essential</span>. Decoys are generated automatically.</p>
+    <input id="list-name" class="field" placeholder="Mission name (e.g. Unit 3 Words)" style="text-align:left; font-size:16px; margin-bottom:10px">
+    <textarea id="list-words" class="field" placeholder="accommodate&#10;definitely | for certain&#10;rhythm"></textarea>
+    <p id="list-error" style="color:var(--alert); font-size:13px; min-height:1.2em; margin:6px 0"></p>
+    <button id="btn-save-list" class="btn btn-primary" style="width:100%; padding:14px">Save mission</button>
+  </div>
+</div>
 
-            function next() {
-                currentQuestionIndex++;
-                if (currentQuestionIndex >= gameDataCopy[currentLevelIndex].questions.length) { startBonusRound(); } 
-                else { loadQuestion(); }
-            }
+<script>
+const GAME_DATA = [{"levelName": "Double Agent Consonants", "questions": [{"word": "accommodate", "decoys": ["acommodate", "accomodate", "acomodate"], "rule": "Two C's and two M's — it likes to 'double up'.", "clue": "To provide room or adapt to fit someone's needs.", "kind": "spelling", "tier": 3}, {"word": "occurrence", "decoys": ["occurence", "occurrance", "ocurrence"], "rule": "Double C, double R, and it ends in -ence.", "clue": "Something that happens; an event or incident.", "kind": "spelling", "tier": 3}, {"word": "embarrass", "decoys": ["embarass", "embaras", "embarras"], "rule": "Two R's and two S's — it's doubly awkward.", "clue": "To make someone feel self-conscious or ashamed.", "kind": "spelling", "tier": 2}, {"word": "possession", "decoys": ["posession", "possesion", "posesion"], "rule": "Four S's in two pairs: pos-SES-Sion.", "clue": "Something you own; the state of having something.", "kind": "spelling", "tier": 2}, {"word": "recommend", "decoys": ["reccommend", "recomend", "reccomend"], "rule": "One C, two M's: re + commend.", "clue": "To suggest something as good or worthwhile.", "kind": "spelling", "tier": 2}, {"word": "committee", "decoys": ["comittee", "commitee", "comitee"], "rule": "Double M, double T, double E.", "clue": "A group chosen to handle a particular task.", "kind": "spelling", "tier": 2}, {"word": "necessary", "decoys": ["neccessary", "necesary", "neccesary"], "rule": "One collar (c), two sleeves (ss).", "clue": "Needed; something you can't do without.", "kind": "spelling", "tier": 2}, {"word": "beginning", "decoys": ["begining", "beggining", "biginning"], "rule": "Double the N before adding -ing.", "clue": "The point where something starts.", "kind": "spelling", "tier": 2}, {"word": "tomorrow", "decoys": ["tommorow", "tomorow", "tommorrow"], "rule": "One M, two R's.", "clue": "The day after today.", "kind": "spelling", "tier": 2}, {"word": "millennium", "decoys": ["millenium", "milennium", "milenium"], "rule": "Double L and double N: mil-LEN-Nium.", "clue": "A period of one thousand years.", "kind": "spelling", "tier": 3}]}, {"levelName": "The Ghost Protocol — Silent Letters", "questions": [{"word": "subtle", "decoys": ["suttle", "subble", "sutle"], "rule": "The B is a ghost — silent but present.", "clue": "So delicate or clever it's hard to notice.", "kind": "spelling", "tier": 2}, {"word": "receipt", "decoys": ["reciept", "receit", "reciet"], "rule": "The P is silent, hiding before the T.", "clue": "A paper proving you paid for something.", "kind": "spelling", "tier": 2}, {"word": "doubt", "decoys": ["dout", "dowt", "doubte"], "rule": "The B is silent — no 'doubt' about it.", "clue": "A feeling of uncertainty.", "kind": "spelling", "tier": 1}, {"word": "column", "decoys": ["collumn", "colomn", "cloumn"], "rule": "The final N is silent.", "clue": "A tall pillar, or a vertical section of text.", "kind": "spelling", "tier": 2}, {"word": "knowledge", "decoys": ["knowlege", "knowlidge", "knoledge"], "rule": "Silent K, and 'ledge' at the end.", "clue": "Information and understanding you've gained.", "kind": "spelling", "tier": 2}, {"word": "rhythm", "decoys": ["rythm", "rhythem", "rythem"], "rule": "Two H's and no real vowel: rhy-thm.", "clue": "A regular, repeated pattern of sound or movement.", "kind": "spelling", "tier": 2}, {"word": "muscle", "decoys": ["mussle", "muscel", "musle"], "rule": "The C is silent, but think of 'muscular'.", "clue": "Body tissue that produces movement.", "kind": "spelling", "tier": 2}, {"word": "foreign", "decoys": ["foriegn", "forreign", "foregn"], "rule": "Silent G, and it breaks the i-before-e rule.", "clue": "From another country; not familiar.", "kind": "spelling", "tier": 1}, {"word": "fascinate", "decoys": ["facinate", "fascenate", "fasinate"], "rule": "A silent C hides after the S.", "clue": "To attract and hold someone's interest completely.", "kind": "spelling", "tier": 3}, {"word": "island", "decoys": ["iland", "islande", "aisland"], "rule": "The S is silent: 'is-land'.", "clue": "A piece of land surrounded by water.", "kind": "spelling", "tier": 1}]}, {"levelName": "The i-before-e Files", "questions": [{"word": "believe", "decoys": ["beleive", "belive", "beleeve"], "rule": "I before E — follow the rule.", "clue": "To accept that something is true.", "kind": "spelling", "tier": 1}, {"word": "receive", "decoys": ["recieve", "receeve", "reseive"], "rule": "Except after C: 'recEIve'.", "clue": "To get or be given something.", "kind": "spelling", "tier": 1}, {"word": "ceiling", "decoys": ["cieling", "ceeling", "cieleng"], "rule": "After C, it's EI: 'cEIling'.", "clue": "The upper surface of a room.", "kind": "spelling", "tier": 2}, {"word": "achieve", "decoys": ["acheive", "achive", "acheeve"], "rule": "I before E in the middle.", "clue": "To succeed in reaching a goal.", "kind": "spelling", "tier": 2}, {"word": "niece", "decoys": ["neice", "neece", "nieece"], "rule": "I before E after N.", "clue": "The daughter of your brother or sister.", "kind": "spelling", "tier": 2}, {"word": "relief", "decoys": ["releif", "releef", "releaf"], "rule": "I before E: rel-IEF.", "clue": "The feeling when worry or pain goes away.", "kind": "spelling", "tier": 2}, {"word": "conceited", "decoys": ["concieted", "conceeted", "conseited"], "rule": "Except after C, so EI here.", "clue": "Too proud of yourself.", "kind": "spelling", "tier": 3}, {"word": "mischief", "decoys": ["mischeif", "mischeef", "mischef"], "rule": "I before E at the end.", "clue": "Playful behavior that causes small trouble.", "kind": "spelling", "tier": 2}, {"word": "brief", "decoys": ["breif", "breef", "briefe"], "rule": "I before E: br-IEF.", "clue": "Lasting only a short time.", "kind": "spelling", "tier": 2}, {"word": "hygiene", "decoys": ["hygeine", "hygene", "higiene"], "rule": "The tricky ending is -iene.", "clue": "Keeping clean to stay healthy.", "kind": "spelling", "tier": 3}]}, {"levelName": "Rebels of i-before-e", "questions": [{"word": "weird", "decoys": ["wierd", "weired", "weerd"], "rule": "A famous rebel — E comes before I.", "clue": "Strange or unusual.", "kind": "spelling", "tier": 1}, {"word": "seize", "decoys": ["sieze", "seeze", "seaze"], "rule": "Another rebel: EI without a C.", "clue": "To grab suddenly and forcefully.", "kind": "spelling", "tier": 2}, {"word": "leisure", "decoys": ["liesure", "leasure", "leizure"], "rule": "Rebel word: 'lEIsure'.", "clue": "Free time for relaxation and fun.", "kind": "spelling", "tier": 2}, {"word": "height", "decoys": ["hieght", "heighth", "heght"], "rule": "EI, and no TH at the end.", "clue": "How tall something is.", "kind": "spelling", "tier": 2}, {"word": "protein", "decoys": ["protien", "protine", "proteen"], "rule": "EI after T, not I before E.", "clue": "A nutrient found in meat, beans, and eggs.", "kind": "spelling", "tier": 2}, {"word": "either", "decoys": ["iether", "eather", "eithir"], "rule": "EI at the start, a common rebel.", "clue": "One or the other of two choices.", "kind": "spelling", "tier": 1}, {"word": "neither", "decoys": ["niether", "neather", "neithir"], "rule": "Same rebel spelling as 'either'.", "clue": "Not one and not the other.", "kind": "spelling", "tier": 1}, {"word": "ancient", "decoys": ["anceint", "ancint", "aincient"], "rule": "The 'cien' looks odd but is correct.", "clue": "Very old; from long ago.", "kind": "spelling", "tier": 1}, {"word": "caffeine", "decoys": ["caffiene", "cafeine", "caffeen"], "rule": "EI rebel: caff-EINE.", "clue": "A substance in coffee that keeps you awake.", "kind": "spelling", "tier": 2}, {"word": "counterfeit", "decoys": ["counterfiet", "counterfeet", "conterfeit"], "rule": "Ends in -feit, an EI rebel.", "clue": "A fake made to look real.", "kind": "spelling", "tier": 3}]}, {"levelName": "Hidden Vowel Heist", "questions": [{"word": "separate", "decoys": ["seperate", "seporate", "seprate"], "rule": "There's 'a rat' in sep-A-RAT-e.", "clue": "To move or keep apart.", "kind": "spelling", "tier": 2}, {"word": "definitely", "decoys": ["definately", "definitly", "definetly"], "rule": "It comes from 'finite': def-I-NITE-ly.", "clue": "For certain; without doubt.", "kind": "spelling", "tier": 2}, {"word": "desperate", "decoys": ["desparate", "desperete", "despret"], "rule": "The middle vowel is an E, from 'desperation'.", "clue": "Feeling hopeless and ready to do anything.", "kind": "spelling", "tier": 2}, {"word": "temperature", "decoys": ["temperture", "temprature", "tempreture"], "rule": "Don't drop the 'era': temp-ERA-ture.", "clue": "How hot or cold something is.", "kind": "spelling", "tier": 3}, {"word": "different", "decoys": ["diffrent", "diferent", "differant"], "rule": "Three syllables: dif-FER-ent.", "clue": "Not the same as something else.", "kind": "spelling", "tier": 2}, {"word": "interesting", "decoys": ["intresting", "interresting", "inteeresting"], "rule": "Four syllables: in-TER-est-ing.", "clue": "Holding your attention.", "kind": "spelling", "tier": 3}, {"word": "chocolate", "decoys": ["choclate", "chocolat", "chocholate"], "rule": "Don't drop the middle O: choc-O-late.", "clue": "A sweet food made from cocoa.", "kind": "spelling", "tier": 2}, {"word": "vegetable", "decoys": ["vegtable", "vegatable", "vegetible"], "rule": "Hidden E: veg-E-table.", "clue": "A plant part eaten as food.", "kind": "spelling", "tier": 2}, {"word": "business", "decoys": ["buisness", "bussiness", "busness"], "rule": "Starts with 'busi-' from 'busy'.", "clue": "A company, or the work it does.", "kind": "spelling", "tier": 2}, {"word": "favorite", "decoys": ["favrite", "faverite", "favourit"], "rule": "Keep the O: fav-O-rite.", "clue": "The one you like best.", "kind": "spelling", "tier": 2}]}, {"levelName": "Homophone Doppelgängers", "questions": [{"word": "their", "decoys": ["there", "they're"], "rule": "'Their' shows possession — it belongs to them.", "clue": "Belonging to those people.", "sentence": "The players grabbed _____ helmets before the game.", "kind": "confusable", "tier": 2}, {"word": "its", "decoys": ["it's"], "rule": "'Its' is possessive; 'it's' means 'it is'.", "clue": "Belonging to a thing.", "sentence": "The dog wagged _____ tail happily.", "kind": "confusable", "tier": 2}, {"word": "your", "decoys": ["you're"], "rule": "'Your' shows possession; 'you're' means 'you are'.", "clue": "Belonging to you.", "sentence": "Please bring _____ notebook to class.", "kind": "confusable", "tier": 2}, {"word": "whose", "decoys": ["who's"], "rule": "'Whose' shows possession; 'who's' means 'who is'.", "clue": "Belonging to which person.", "sentence": "_____ backpack is this on the floor?", "kind": "confusable", "tier": 2}, {"word": "than", "decoys": ["then"], "rule": "'Than' compares; 'then' is about time.", "clue": "Used to compare two things.", "sentence": "My dog is bigger _____ your cat.", "kind": "confusable", "tier": 2}, {"word": "principal", "decoys": ["principle"], "rule": "The princi-PAL is your pal; a princi-PLE is a rule.", "clue": "The head of a school.", "sentence": "The _____ spoke at the assembly.", "kind": "confusable", "tier": 2}, {"word": "stationery", "decoys": ["stationary"], "rule": "Station-E-ry has Envelopes; stationary means not moving.", "clue": "Paper and writing supplies.", "sentence": "She bought new _____ to write letters.", "kind": "confusable", "tier": 3}, {"word": "weather", "decoys": ["whether"], "rule": "'Weather' is outside; 'whether' introduces a choice.", "clue": "The state of the sky and air.", "sentence": "The _____ was sunny all afternoon.", "kind": "confusable", "tier": 2}]}, {"levelName": "Confusable Confidential", "questions": [{"word": "effect", "decoys": ["affect"], "rule": "'Effect' is usually a noun (a result); 'affect' is usually a verb.", "clue": "A result or outcome.", "sentence": "The medicine had a strong _____ on her.", "kind": "confusable", "tier": 2}, {"word": "accept", "decoys": ["except"], "rule": "'Accept' means to receive; 'except' means to leave out.", "clue": "To agree to receive something.", "sentence": "I gladly _____ your invitation.", "kind": "confusable", "tier": 2}, {"word": "compliment", "decoys": ["complement"], "rule": "A compl-I-ment is praise (I like it!).", "clue": "A polite expression of praise.", "sentence": "She gave me a kind _____ on my essay.", "kind": "confusable", "tier": 2}, {"word": "lose", "decoys": ["loose"], "rule": "'Lose' rhymes with 'news'; 'loose' rhymes with 'goose'.", "clue": "To no longer have something.", "sentence": "Don't _____ your keys again.", "kind": "confusable", "tier": 2}, {"word": "advice", "decoys": ["advise"], "rule": "'Advice' is the noun; 'advise' is the verb.", "clue": "A suggestion about what to do.", "sentence": "My coach gave me great _____ before the meet.", "kind": "confusable", "tier": 2}, {"word": "dessert", "decoys": ["desert"], "rule": "Dessert has two S's — you want more of it!", "clue": "A sweet dish eaten after a meal.", "sentence": "We had ice cream for _____.", "kind": "confusable", "tier": 2}, {"word": "passed", "decoys": ["past"], "rule": "'Passed' is the verb; 'past' is a time or direction.", "clue": "Went by; succeeded.", "sentence": "She _____ the test with ease.", "kind": "confusable", "tier": 2}, {"word": "brake", "decoys": ["break"], "rule": "You use a 'brake' to stop a bike.", "clue": "The device that stops a vehicle.", "sentence": "He hit the _____ to stop the car.", "kind": "confusable", "tier": 2}]}, {"levelName": "Suffix Sabotage — ance vs ence", "questions": [{"word": "existence", "decoys": ["existance", "existince", "existanse"], "rule": "Ends in -ence, not -ance.", "clue": "The state of being real or alive.", "kind": "spelling", "tier": 2}, {"word": "maintenance", "decoys": ["maintainance", "maintenence", "maintanance"], "rule": "The main part is 'mainten', then -ance.", "clue": "The work of keeping something in good condition.", "kind": "spelling", "tier": 3}, {"word": "independence", "decoys": ["independance", "indepindence", "independense"], "rule": "Ends in -ence: 'depend-ENCE'.", "clue": "Freedom from outside control.", "kind": "spelling", "tier": 3}, {"word": "appearance", "decoys": ["appearence", "apearance", "appearrance"], "rule": "From 'appear' + -ance.", "clue": "The way someone or something looks.", "kind": "spelling", "tier": 2}, {"word": "difference", "decoys": ["diference", "differance", "differense"], "rule": "Ends in -ence.", "clue": "The way two things are not the same.", "kind": "spelling", "tier": 2}, {"word": "confidence", "decoys": ["confidance", "confidense", "confedence"], "rule": "Ends in -ence.", "clue": "A feeling of trust in yourself.", "kind": "spelling", "tier": 2}, {"word": "patience", "decoys": ["patiance", "pacience", "pationce"], "rule": "Ends in -ence after 'ti'.", "clue": "The ability to wait calmly.", "kind": "spelling", "tier": 2}, {"word": "experience", "decoys": ["experiance", "experence", "expirience"], "rule": "Ends in -ence.", "clue": "Knowledge gained by doing something.", "kind": "spelling", "tier": 2}, {"word": "disappearance", "decoys": ["disapearance", "disappearence", "disappearrance"], "rule": "Start with 'disappear' + -ance.", "clue": "The act of no longer being seen.", "kind": "spelling", "tier": 3}, {"word": "resistance", "decoys": ["resistence", "resistanse", "reisistance"], "rule": "Ends in -ance.", "clue": "The act of fighting against something.", "kind": "spelling", "tier": 2}]}, {"levelName": "The -able / -ible Directive", "questions": [{"word": "responsible", "decoys": ["responsable", "responcible", "responsibel"], "rule": "Words from -spond/-sponse take -ible.", "clue": "In charge of something; trustworthy.", "kind": "spelling", "tier": 3}, {"word": "incredible", "decoys": ["incredable", "incredibble", "increadible"], "rule": "From Latin 'credibilis' — -ible.", "clue": "Too amazing to believe.", "kind": "spelling", "tier": 2}, {"word": "acceptable", "decoys": ["acceptible", "aceptable", "acceptabel"], "rule": "Root is a full word ('accept') → -able.", "clue": "Good enough; allowed.", "kind": "spelling", "tier": 2}, {"word": "comfortable", "decoys": ["comftable", "comfortible", "confortable"], "rule": "From 'comfort' + -able.", "clue": "Giving a relaxed, cozy feeling.", "kind": "spelling", "tier": 3}, {"word": "available", "decoys": ["availible", "avalable", "availabel"], "rule": "Root 'avail' + -able.", "clue": "Able to be used or obtained.", "kind": "spelling", "tier": 2}, {"word": "possible", "decoys": ["possable", "posible", "possibel"], "rule": "Ends in -ible.", "clue": "Able to happen or be done.", "kind": "spelling", "tier": 2}, {"word": "terrible", "decoys": ["terrable", "terribble", "teribble"], "rule": "Ends in -ible.", "clue": "Very bad or unpleasant.", "kind": "spelling", "tier": 2}, {"word": "valuable", "decoys": ["valueable", "valuble", "valubable"], "rule": "Drop the E from 'value' → -able.", "clue": "Worth a lot of money or importance.", "kind": "spelling", "tier": 2}, {"word": "reliable", "decoys": ["relyable", "reliabel", "relaible"], "rule": "From 'rely' → 'reli' + -able.", "clue": "Able to be trusted or depended on.", "kind": "spelling", "tier": 2}, {"word": "noticeable", "decoys": ["noticable", "noticeble", "notisable"], "rule": "Keep the E to keep the C soft.", "clue": "Easy to see or notice.", "kind": "spelling", "tier": 3}]}, {"levelName": "The Silent-e Switcheroo", "questions": [{"word": "argument", "decoys": ["arguement", "argumant", "arguemint"], "rule": "Drop the E from 'argue'.", "clue": "A disagreement, or a set of reasons.", "kind": "spelling", "tier": 2}, {"word": "writing", "decoys": ["writeing", "writting", "writeng"], "rule": "Drop the E from 'write', keep one T.", "clue": "Words put down on paper or screen.", "kind": "spelling", "tier": 1}, {"word": "truly", "decoys": ["truely", "truley", "trully"], "rule": "Drop the E from 'true'.", "clue": "In a real or genuine way.", "kind": "spelling", "tier": 1}, {"word": "coming", "decoys": ["comming", "comeing", "cominng"], "rule": "Drop the E, don't double the M.", "clue": "Arriving or approaching.", "kind": "spelling", "tier": 1}, {"word": "ninth", "decoys": ["nineth", "nynth", "ninthe"], "rule": "Drop the E from 'nine'.", "clue": "Number nine in a sequence.", "kind": "spelling", "tier": 2}, {"word": "changeable", "decoys": ["changable", "changeble", "changeabel"], "rule": "Keep the E to keep the G soft.", "clue": "Likely to change; not steady.", "kind": "spelling", "tier": 3}, {"word": "courageous", "decoys": ["couragous", "curageous", "courageus"], "rule": "Keep the E from 'courage'.", "clue": "Very brave.", "kind": "spelling", "tier": 2}, {"word": "management", "decoys": ["managment", "manegement", "managemant"], "rule": "Keep the E from 'manage'.", "clue": "The act of controlling or directing.", "kind": "spelling", "tier": 2}, {"word": "hoping", "decoys": ["hopeing", "hopeng", "hoaping"], "rule": "Drop the E from 'hope', keep one P.", "clue": "Wishing for something to happen.", "kind": "spelling", "tier": 1}, {"word": "awful", "decoys": ["awfull", "aweful", "offul"], "rule": "Drop the E from 'awe', one L.", "clue": "Very bad or unpleasant.", "kind": "spelling", "tier": 1}]}, {"levelName": "The -cede / -ceed / -sede Cipher", "questions": [{"word": "succeed", "decoys": ["succede", "suceed", "succeede"], "rule": "Only 3 words use -ceed: succeed, proceed, exceed.", "clue": "To achieve what you set out to do.", "kind": "spelling", "tier": 2}, {"word": "proceed", "decoys": ["procede", "proseed", "proceede"], "rule": "One of the three -ceed words.", "clue": "To continue or move forward.", "kind": "spelling", "tier": 1}, {"word": "exceed", "decoys": ["excede", "exseed", "exceede"], "rule": "One of the three -ceed words.", "clue": "To go beyond a limit.", "kind": "spelling", "tier": 2}, {"word": "precede", "decoys": ["preceed", "presede", "precced"], "rule": "Most others use -cede.", "clue": "To come before something.", "kind": "spelling", "tier": 3}, {"word": "recede", "decoys": ["receed", "resede", "reccede"], "rule": "Uses -cede.", "clue": "To move back or fade away.", "kind": "spelling", "tier": 3}, {"word": "supersede", "decoys": ["supercede", "superseed", "superceed"], "rule": "The ONLY word that ends in -sede.", "clue": "To replace or take the place of.", "kind": "spelling", "tier": 3}, {"word": "concede", "decoys": ["conceed", "consede", "concceed"], "rule": "Uses -cede.", "clue": "To admit or give in.", "kind": "spelling", "tier": 2}, {"word": "intercede", "decoys": ["interceed", "intersede", "intercced"], "rule": "Uses -cede.", "clue": "To step in to help settle a dispute.", "kind": "spelling", "tier": 3}]}, {"levelName": "Operation: Foreign Agents", "questions": [{"word": "restaurant", "decoys": ["restaraunt", "resturant", "restraunt"], "rule": "Remember the 'au' in the middle.", "clue": "A place where you pay to eat meals.", "kind": "spelling", "tier": 2}, {"word": "liaison", "decoys": ["liason", "liazon", "liaision"], "rule": "A French word with two I's.", "clue": "A person who connects two groups.", "kind": "spelling", "tier": 2}, {"word": "camouflage", "decoys": ["camoflage", "camoflauge", "camouflague"], "rule": "Keep the 'ou' in this French word.", "clue": "A disguise that blends into surroundings.", "kind": "spelling", "tier": 2}, {"word": "bureaucracy", "decoys": ["beurocracy", "bureacracy", "burocracy"], "rule": "The 'eau' is a French spelling.", "clue": "Government run through many official steps.", "kind": "spelling", "tier": 3}, {"word": "chauffeur", "decoys": ["chauffeer", "chauffuer", "chaufeur"], "rule": "Note the 'ff' and the -eur ending.", "clue": "A person hired to drive a car.", "kind": "spelling", "tier": 2}, {"word": "entrepreneur", "decoys": ["entreprenuer", "entrepeneur", "entreprenur"], "rule": "A French word: -preneur.", "clue": "A person who starts a business.", "kind": "spelling", "tier": 3}, {"word": "questionnaire", "decoys": ["questionaire", "questionnare", "questionairre"], "rule": "Double N: question + naire.", "clue": "A set of written questions to answer.", "kind": "spelling", "tier": 3}, {"word": "silhouette", "decoys": ["silhouete", "sillhouette", "silouette"], "rule": "Keep 'hou' in the middle.", "clue": "A dark outline against a light background.", "kind": "spelling", "tier": 3}, {"word": "maneuver", "decoys": ["manuever", "maneuvre", "manoeuver"], "rule": "The tricky part is 'euv'.", "clue": "A skillful or clever movement.", "kind": "spelling", "tier": 2}, {"word": "lieutenant", "decoys": ["leutenant", "lieutenent", "lutenant"], "rule": "Starts 'lieu-' like 'in lieu of'.", "clue": "A military officer's rank.", "kind": "spelling", "tier": 2}]}, {"levelName": "The Sneaky Letter Syndicate", "questions": [{"word": "mischievous", "decoys": ["mischevious", "mischievious", "mischevous"], "rule": "Three syllables: mis-chie-vous.", "clue": "Playfully causing trouble.", "kind": "spelling", "tier": 3}, {"word": "license", "decoys": ["lisense", "licenze", "licsense"], "rule": "A C then an S: li-C-en-S-e.", "clue": "Official permission to do something.", "kind": "spelling", "tier": 1}, {"word": "acquaintance", "decoys": ["aquaintance", "acquaintence", "acquantance"], "rule": "Keep the C after A: 'acq'.", "clue": "Someone you know a little, not a close friend.", "kind": "spelling", "tier": 3}, {"word": "harass", "decoys": ["harrass", "haras", "harras"], "rule": "One R, two S's.", "clue": "To bother or pressure someone repeatedly.", "kind": "spelling", "tier": 2}, {"word": "conscience", "decoys": ["conscence", "concience", "consience"], "rule": "'con' + 'science' — your inner science.", "clue": "Your inner sense of right and wrong.", "kind": "spelling", "tier": 2}, {"word": "guarantee", "decoys": ["garantee", "guarentee", "garuntee"], "rule": "Starts 'gua-' like 'guard'.", "clue": "A firm promise that something will happen.", "kind": "spelling", "tier": 2}, {"word": "calendar", "decoys": ["calandar", "calendr", "calindar"], "rule": "Ends in -dar, not -der.", "clue": "A chart of the days, weeks, and months.", "kind": "spelling", "tier": 2}, {"word": "privilege", "decoys": ["priviledge", "privilage", "privelege"], "rule": "No D: privi + lege.", "clue": "A special right or advantage.", "kind": "spelling", "tier": 2}, {"word": "government", "decoys": ["goverment", "governmnet", "govenment"], "rule": "Keep the N: govern + ment.", "clue": "The group that runs a country or state.", "kind": "spelling", "tier": 2}, {"word": "cemetery", "decoys": ["cemetary", "cematery", "cemetry"], "rule": "All E's: c-E-m-E-t-E-ry.", "clue": "A place where the dead are buried.", "kind": "spelling", "tier": 2}]}, {"levelName": "Apostrophe Ambush", "questions": [{"word": "could've", "decoys": ["could of"], "rule": "'Could've' = could have. 'Could of' is never correct.", "clue": "A short way to say 'could have'.", "sentence": "You _____ told me the class was cancelled.", "kind": "confusable", "tier": 3}, {"word": "they're", "decoys": ["their", "there"], "rule": "'They're' means 'they are'.", "clue": "A short way to say 'they are'.", "sentence": "Look — _____ going to win the game!", "kind": "confusable", "tier": 2}, {"word": "you're", "decoys": ["your"], "rule": "'You're' means 'you are'.", "clue": "A short way to say 'you are'.", "sentence": "I think _____ going to love this movie.", "kind": "confusable", "tier": 3}, {"word": "who's", "decoys": ["whose"], "rule": "'Who's' means 'who is' or 'who has'.", "clue": "A short way to say 'who is'.", "sentence": "Do you know _____ coming to the party?", "kind": "confusable", "tier": 2}, {"word": "it's", "decoys": ["its"], "rule": "'It's' means 'it is' or 'it has'.", "clue": "A short way to say 'it is'.", "sentence": "I think _____ going to rain later.", "kind": "confusable", "tier": 2}, {"word": "doesn't", "decoys": ["dosen't", "doesnt"], "rule": "'Doesn't' = does not; apostrophe replaces the O.", "clue": "A short way to say 'does not'.", "sentence": "She _____ want to be late again.", "kind": "confusable", "tier": 2}]}, {"levelName": "Tricky Endings", "questions": [{"word": "occasion", "decoys": ["ocassion", "occassion", "ocasion"], "rule": "Two C's, one S.", "clue": "A special event or particular time.", "kind": "spelling", "tier": 2}, {"word": "permission", "decoys": ["permision", "permmission", "permissian"], "rule": "Double S before -ion.", "clue": "Official approval to do something.", "kind": "spelling", "tier": 2}, {"word": "musician", "decoys": ["musicion", "muscian", "musitian"], "rule": "Ends in -cian for a person.", "clue": "A person who plays or writes music.", "kind": "spelling", "tier": 2}, {"word": "physician", "decoys": ["physicion", "phisician", "physican"], "rule": "Ends in -cian: a person.", "clue": "A medical doctor.", "kind": "spelling", "tier": 2}, {"word": "beautiful", "decoys": ["beutiful", "beautifull", "beatiful"], "rule": "Starts 'beau-', ends with one L.", "clue": "Very pleasing to look at.", "kind": "spelling", "tier": 2}, {"word": "finally", "decoys": ["finaly", "finnally", "finallly"], "rule": "Double L: 'final' + -ly.", "clue": "At last; after some time.", "kind": "spelling", "tier": 1}, {"word": "really", "decoys": ["realy", "reallly", "reely"], "rule": "Double L: 'real' + -ly.", "clue": "Truly; in fact.", "kind": "spelling", "tier": 1}, {"word": "usually", "decoys": ["usualy", "usaully", "usaually"], "rule": "'usual' + -ly, keep both L's.", "clue": "Most of the time.", "kind": "spelling", "tier": 1}, {"word": "definition", "decoys": ["defenition", "definiton", "definishion"], "rule": "From 'define': def-I-nition.", "clue": "A statement of what a word means.", "kind": "spelling", "tier": 2}, {"word": "description", "decoys": ["discription", "descripton", "describtion"], "rule": "Starts 'de-' not 'di-'; has a P.", "clue": "An account of what something is like.", "kind": "spelling", "tier": 3}]}, {"levelName": "Numbers & Measures", "questions": [{"word": "forty", "decoys": ["fourty", "forety", "fortey"], "rule": "No U — 'forty' drops it, unlike 'four'.", "clue": "The number 40.", "kind": "spelling", "tier": 2}, {"word": "ninety", "decoys": ["ninty", "ninthy", "nintey"], "rule": "Keep the E from 'nine': nine + ty.", "clue": "The number 90.", "kind": "spelling", "tier": 2}, {"word": "twelfth", "decoys": ["twelth", "twelvth", "twefth"], "rule": "Keep the F: twelf + th.", "clue": "Number twelve in a sequence.", "kind": "spelling", "tier": 3}, {"word": "eighth", "decoys": ["eightth", "eigth", "eith"], "rule": "'eight' + th — just one T sound.", "clue": "Number eight in a sequence.", "kind": "spelling", "tier": 2}, {"word": "weight", "decoys": ["wieght", "waight", "weght"], "rule": "EIGH like 'eight'.", "clue": "How heavy something is.", "kind": "spelling", "tier": 1}, {"word": "length", "decoys": ["lenght", "lengh", "lenth"], "rule": "From 'long': leng + th.", "clue": "How long something is.", "kind": "spelling", "tier": 2}, {"word": "distance", "decoys": ["distanse", "distence", "distanct"], "rule": "Ends in -ance: dist + ance.", "clue": "The amount of space between two points.", "kind": "spelling", "tier": 2}, {"word": "thousand", "decoys": ["thousend", "thousant", "thowsand"], "rule": "Ends in -sand.", "clue": "The number 1,000.", "kind": "spelling", "tier": 2}, {"word": "dozen", "decoys": ["dozan", "dosen", "duzen"], "rule": "Ends in -zen.", "clue": "A group of twelve.", "kind": "spelling", "tier": 1}, {"word": "measure", "decoys": ["mesure", "measurre", "meashure"], "rule": "Starts 'meas-' like 'meadow'.", "clue": "To find the size or amount of something.", "kind": "spelling", "tier": 2}]}, {"levelName": "Everyday Offenders", "questions": [{"word": "until", "decoys": ["untill", "untl", "untille"], "rule": "Only one L at the end.", "clue": "Up to the time that.", "kind": "spelling", "tier": 1}, {"word": "across", "decoys": ["accross", "acros", "akross"], "rule": "One C, two S's.", "clue": "From one side to the other.", "kind": "spelling", "tier": 1}, {"word": "thorough", "decoys": ["thourough", "thorogh", "throrough"], "rule": "Contains 'rough': tho-rough.", "clue": "Complete and careful.", "kind": "spelling", "tier": 2}, {"word": "through", "decoys": ["throught", "thruogh", "throuh"], "rule": "GH is silent: th-r-ough.", "clue": "Moving in one side and out the other.", "kind": "spelling", "tier": 1}, {"word": "although", "decoys": ["allthough", "althrough", "athough"], "rule": "One L: al + though.", "clue": "In spite of the fact that.", "kind": "spelling", "tier": 2}, {"word": "neighbor", "decoys": ["nieghbor", "naybor", "neighbore"], "rule": "EIGH like 'eight'.", "clue": "A person who lives next to you.", "kind": "spelling", "tier": 2}, {"word": "familiar", "decoys": ["familar", "fimiliar", "familliar"], "rule": "Ends in -iar: famil-iar.", "clue": "Well known or easily recognized.", "kind": "spelling", "tier": 2}, {"word": "surprise", "decoys": ["suprise", "surprse", "supprise"], "rule": "Two R's: sur + prise.", "clue": "Something unexpected.", "kind": "spelling", "tier": 2}, {"word": "probably", "decoys": ["probaly", "probubly", "probally"], "rule": "Three syllables: prob-ab-ly.", "clue": "Almost certainly; most likely.", "kind": "spelling", "tier": 2}, {"word": "sincerely", "decoys": ["sincerly", "sinserely", "sincerelly"], "rule": "From 'sincere' + -ly, keep the E.", "clue": "In an honest, genuine way (used to end letters).", "kind": "spelling", "tier": 2}]}];
+const PROOF_DATA = [{"sentence": "I could not beleive how quickly the storm arrived.", "wrong": "beleive", "right": "believe", "rule": "I before E: bel-IEVE."}, {"sentence": "She was definately going to try out for the team.", "wrong": "definately", "right": "definitely", "rule": "From 'finite': def-i-NITE-ly."}, {"sentence": "The two friends decided to seperate the chores evenly.", "wrong": "seperate", "right": "separate", "rule": "There's 'a rat' in sep-A-RAT-e."}, {"sentence": "We recieved the package a day earlier than expected.", "wrong": "recieved", "right": "received", "rule": "Except after C: recEIved."}, {"sentence": "His messy handwriting was hard to read and embarassing.", "wrong": "embarassing", "right": "embarrassing", "rule": "Two R's and two S's."}, {"sentence": "The librarian recomended a mystery novel to me.", "wrong": "recomended", "right": "recommended", "rule": "One C, two M's."}, {"sentence": "They visited an old cemetary on the edge of town.", "wrong": "cemetary", "right": "cemetery", "rule": "All E's: c-e-m-e-t-e-ry."}, {"sentence": "It is neccessary to bring a pencil to the exam.", "wrong": "neccessary", "right": "necessary", "rule": "One collar (c), two sleeves (ss)."}, {"sentence": "The magician performed an incredable disappearing act.", "wrong": "incredable", "right": "incredible", "rule": "Ends in -ible."}, {"sentence": "Our teacher gave us a lot of usefull advice.", "wrong": "usefull", "right": "useful", "rule": "One L: use + ful."}, {"sentence": "The weather was to cold for swimming today.", "wrong": "to", "right": "too", "rule": "'Too' means 'also' or 'excessively'."}, {"sentence": "Their going to announce the winner after lunch.", "wrong": "Their", "right": "They're", "rule": "'They're' means 'they are'."}, {"sentence": "The dog chased it's own tail in circles.", "wrong": "it's", "right": "its", "rule": "'Its' is possessive; 'it's' means 'it is'."}, {"sentence": "You should of seen the look on his face.", "wrong": "of", "right": "have", "rule": "'Should have', never 'should of'."}, {"sentence": "The committe met on Friday to plan the dance.", "wrong": "committe", "right": "committee", "rule": "Double M, double T, double E."}, {"sentence": "A strange and wierd noise came from the attic.", "wrong": "wierd", "right": "weird", "rule": "A rebel word: E before I."}, {"sentence": "The resturant was famous for its homemade pasta.", "wrong": "resturant", "right": "restaurant", "rule": "Remember the 'au': rest-AU-rant."}, {"sentence": "He felt a great sense of releif when the test ended.", "wrong": "releif", "right": "relief", "rule": "I before E: rel-IEF."}, {"sentence": "The knight showed tremendous curage in the battle.", "wrong": "curage", "right": "courage", "rule": "Keep the 'ou': c-OU-rage."}, {"sentence": "Please rember to water the plants while I am away.", "wrong": "rember", "right": "remember", "rule": "Two M's: re-MEM-ber."}, {"sentence": "The scientist recorded every occurence in her notebook.", "wrong": "occurence", "right": "occurrence", "rule": "Double C, double R."}, {"sentence": "My little brother is very mischevous at bedtime.", "wrong": "mischevous", "right": "mischievous", "rule": "mis-CHIE-vous, three syllables."}, {"sentence": "The suprise party was a huge success.", "wrong": "suprise", "right": "surprise", "rule": "Two R's: sur-PR-ise."}, {"sentence": "We studied the goverment and its new laws.", "wrong": "goverment", "right": "government", "rule": "Keep the N: govern-ment."}];
+const COMMON = new Set(["a", "abandon", "abandoned", "ability", "able", "aboard", "about", "above", "absolute", "abuse", "accept", "accepted", "access", "accident", "accompany", "according", "account", "accounts", "accused", "achieve", "across", "act", "acted", "acting", "action", "actions", "active", "activity", "actor", "acts", "actual", "actually", "ad", "add", "added", "address", "admire", "admit", "admitted", "adult", "advance", "advanced", "advantage", "advice", "advise", "affair", "affairs", "affect", "affected", "afford", "afraid", "after", "again", "against", "age", "agency", "agent", "agents", "ago", "agree", "agreed", "agreement", "ah", "ahead", "aid", "aim", "air", "airport", "alarm", "alcohol", "alert", "alien", "aliens", "alive", "all", "allergic", "allow", "allowed", "allows", "almost", "alone", "along", "already", "alright", "also", "although", "always", "am", "amazing", "ambulance", "american", "americans", "among", "amongst", "amount", "an", "analysis", "ancient", "and", "angel", "angels", "anger", "angle", "angry", "animal", "animals", "announce", "anonymous", "another", "answer", "answered", "answering", "answers", "anxious", "any", "anybody", "anymore", "anyone", "anything", "anytime", "anyway", "anywhere", "apart", "apartment", "apologize", "appeal", "appear", "appeared", "appears", "applause", "apple", "apply", "approach", "approve", "are", "area", "areas", "argue", "arguing", "argument", "arm", "armed", "arms", "army", "around", "arrange", "arranged", "arrest", "arrested", "arrive", "arrived", "arriving", "art", "article", "artist", "arts", "as", "ashamed", "aside", "ask", "asked", "asking", "asks", "asleep", "ass", "assault", "asses", "asshole", "assigned", "assist", "assistant", "assume", "assumed", "assuming", "assure", "at", "ate", "attached", "attack", "attacked", "attacking", "attacks", "attempt", "attempted", "attend", "attention", "attitude", "attorney", "attracted", "audience", "aunt", "authority", "available", "average", "avoid", "avoiding", "awake", "aware", "away", "awesome", "awful", "awfully", "awkward", "babies", "baby", "back", "backup", "bad", "badge", "badly", "bag", "bags", "bail", "balance", "ball", "balls", "band", "bang", "banging", "bank", "banks", "bar", "bare", "barely", "bars", "base", "baseball", "based", "basement", "basic", "basically", "bastard", "bastards", "bat", "bath", "bathroom", "battery", "battle", "be", "beach", "beam", "bear", "bearing", "bears", "beast", "beat", "beaten", "beating", "beats", "beautiful", "beauty", "became", "because", "become", "becomes", "becoming", "bed", "bedroom", "beef", "been", "beer", "before", "beg", "began", "begged", "begging", "begin", "beginning", "begins", "begun", "behalf", "behave", "behavior", "behind", "being", "beings", "belief", "believe", "believed", "believes", "believing", "bell", "bells", "belly", "belong", "belonged", "belongs", "beloved", "below", "belt", "bend", "beneath", "benefit", "beside", "besides", "best", "bet", "betray", "betrayed", "better", "between", "beyond", "bid", "big", "bigger", "biggest", "bike", "bill", "billion", "bills", "bird", "birds", "birth", "birthday", "bit", "bitch", "bite", "bits", "bitter", "black", "blade", "blame", "blaming", "blast", "bleed", "bleeding", "bless", "blessed", "blew", "blind", "block", "blocks", "blood", "bloody", "blow", "blowing", "blown", "blows", "blue", "board", "boarding", "boat", "bodies", "body", "bomb", "bombs", "bond", "bone", "bones", "book", "booked", "books", "boots", "border", "bored", "boring", "born", "borrow", "borrowed", "boss", "both", "bother", "bothered", "bothering", "bothers", "bottle", "bottles", "bottom", "bought", "bound", "bow", "bowl", "box", "boxes", "boy", "boyfriend", "boys", "brain", "brains", "branch", "brand", "brave", "bread", "break", "breakfast", "breaking", "breaks", "breath", "breathe", "breathing", "bride", "bridge", "brief", "bright", "brilliant", "bring", "bringing", "brings", "british", "broad", "broke", "broken", "brother", "brothers", "brought", "brown", "brush", "bucks", "buddy", "bug", "build", "building", "buildings", "built", "bull", "bullet", "bullets", "bullshit", "bump", "bunch", "burden", "buried", "burn", "burned", "burning", "burns", "burnt", "burst", "bury", "bus", "business", "bust", "busted", "busy", "but", "butt", "butter", "button", "buy", "buying", "buys", "by", "bye", "cab", "cabin", "cable", "cage", "cake", "call", "called", "calling", "calls", "calm", "came", "camera", "cameras", "camp", "campaign", "can", "cancel", "cancer", "candy", "cannot", "capable", "capital", "captain", "capture", "captured", "car", "card", "cards", "care", "cared", "career", "careful", "carefully", "cares", "cargo", "carried", "carries", "carry", "carrying", "cars", "case", "cases", "cash", "cast", "castle", "cat", "catch", "catching", "cats", "caught", "cause", "caused", "causes", "causing", "cave", "celebrate", "cell", "cells", "center", "central", "century", "ceremony", "certain", "certainly", "chain", "chair", "challenge", "champagne", "champion", "chance", "chances", "change", "changed", "changes", "changing", "channel", "chapter", "character", "charge", "charged", "charges", "charity", "charming", "chase", "chased", "chasing", "chat", "cheap", "cheat", "cheated", "cheating", "check", "checked", "checking", "checks", "cheer", "cheering", "cheers", "cheese", "chemical", "chest", "chick", "chicken", "chicks", "chief", "child", "childhood", "children", "chill", "chinese", "chip", "chocolate", "choice", "choose", "chop", "chose", "chosen", "christian", "chuckles", "church", "cigarette", "circle", "cities", "citizens", "city", "civil", "civilian", "claim", "claimed", "claims", "class", "classic", "clean", "cleaned", "cleaning", "clear", "cleared", "clearly", "clever", "client", "clients", "climb", "climbing", "clock", "close", "closed", "closer", "closes", "closest", "closing", "clothes", "cloud", "clouds", "club", "clue", "coach", "coast", "coat", "cock", "code", "coffee", "cold", "collect", "college", "colonel", "color", "combat", "come", "comes", "comfort", "comic", "coming", "command", "commander", "comment", "commit", "committed", "committee", "common", "community", "companies", "company", "compare", "compared", "complain", "complete", "completed", "complex", "computer", "con", "concept", "concern", "concerned", "concerns", "concert", "condition", "conduct", "confess", "confident", "confirm", "confirmed", "confused", "connect", "connected", "consider", "constant", "contact", "contacted", "contain", "contains", "continue", "continued", "continues", "contract", "control", "controls", "convince", "convinced", "cook", "cooked", "cooking", "cool", "cop", "copies", "cops", "copy", "core", "corn", "corner", "corporate", "correct", "corrected", "cos", "cost", "costs", "costume", "couch", "could", "council", "count", "counting", "countries", "country", "county", "couple", "courage", "course", "court", "cousin", "cover", "covered", "covering", "cow", "crack", "cracked", "crap", "crash", "crashed", "crawl", "crawling", "crazy", "cream", "create", "created", "creating", "creative", "creature", "creatures", "credit", "creepy", "crew", "cried", "crime", "crimes", "criminal", "criminals", "crisis", "critical", "cross", "crossed", "crossing", "crowd", "crown", "cruel", "crush", "crushed", "cry", "crying", "crystal", "culture", "cup", "cure", "curious", "current", "currently", "curse", "custody", "customer", "customers", "cut", "cute", "cuts", "cutting", "dad", "daddy", "daily", "damage", "damaged", "damn", "damned", "dance", "dancing", "danger", "dangerous", "dare", "dark", "darkness", "darling", "data", "date", "dated", "dates", "dating", "daughter", "dawn", "day", "days", "de", "dead", "deadly", "deal", "dealer", "dealing", "deals", "dealt", "dear", "death", "debt", "decent", "decide", "decided", "decides", "decision", "decisions", "deck", "declare", "declared", "dedicated", "deep", "deeper", "deeply", "defeat", "defend", "defendant", "defending", "defense", "degree", "degrees", "delay", "delicate", "delicious", "delighted", "deliver", "delivered", "delivery", "demand", "demands", "demon", "demons", "denied", "deny", "depend", "depends", "deposit", "deputy", "describe", "described", "desert", "deserve", "deserved", "deserves", "design", "designed", "desire", "desk", "desperate", "despite", "destiny", "destroy", "destroyed", "detail", "details", "detective", "determine", "develop", "developed", "device", "devil", "devoted", "dial", "diamond", "diamonds", "dick", "did", "die", "died", "dies", "different", "difficult", "dig", "digging", "dining", "dinner", "direct", "directed", "direction", "directly", "director", "dirt", "dirty", "disappear", "discover", "discuss", "discussed", "disease", "dish", "display", "distance", "distant", "distract", "district", "disturb", "dive", "divine", "divorce", "do", "doctor", "doctors", "documents", "does", "dog", "dogs", "doing", "doll", "dollar", "dollars", "domestic", "don", "done", "door", "doors", "double", "doubt", "down", "downtown", "dozen", "dozens", "drag", "dragged", "dragging", "dragon", "drama", "dramatic", "drank", "draw", "drawing", "drawn", "dream", "dreamed", "dreaming", "dreams", "dress", "dressed", "dressing", "drew", "drink", "drinking", "drinks", "drive", "driven", "driver", "drives", "driving", "drop", "dropped", "dropping", "drops", "drove", "drown", "drug", "drugs", "drunk", "dry", "duck", "dude", "due", "dug", "dumb", "dump", "dumped", "during", "dust", "duty", "dying", "e", "each", "eager", "ear", "earlier", "early", "earn", "earned", "ears", "earth", "ease", "easier", "easily", "east", "easy", "eat", "eaten", "eating", "eats", "edge", "education", "effect", "effective", "effects", "effort", "egg", "eggs", "eight", "either", "election", "electric", "elements", "elevator", "eliminate", "else", "embarrass", "embrace", "emergency", "emotional", "emotions", "employee", "employees", "empty", "en", "end", "ended", "ending", "endless", "ends", "enemies", "enemy", "energy", "engage", "engaged", "engine", "engines", "english", "enjoy", "enjoyed", "enjoying", "enormous", "enough", "ensure", "enter", "entered", "entering", "entire", "entirely", "entitled", "entrance", "entry", "envy", "episode", "equal", "equipment", "escape", "escaped", "escort", "establish", "estate", "et", "eternal", "european", "even", "evening", "event", "events", "ever", "every", "everybody", "everyday", "everyone", "evidence", "evil", "exact", "exactly", "examine", "example", "excellent", "except", "exchange", "excited", "exciting", "excuse", "executive", "exercise", "exist", "existence", "exit", "expect", "expected", "expecting", "expensive", "expert", "explain", "explained", "explains", "explosion", "expose", "exposed", "express", "extra", "extreme", "extremely", "eye", "eyes", "face", "faced", "faces", "facility", "facing", "fact", "factory", "facts", "fail", "failed", "failure", "fair", "fairly", "fairy", "faith", "faithful", "fake", "fall", "fallen", "falling", "falls", "false", "familiar", "families", "family", "famous", "fan", "fancy", "fans", "fantastic", "fantasy", "far", "farm", "fashion", "fast", "faster", "fat", "fate", "father", "fault", "favor", "favorite", "fear", "fed", "federal", "feed", "feeding", "feel", "feeling", "feelings", "feels", "feet", "fell", "fella", "fellow", "felt", "female", "fence", "fetch", "fever", "few", "field", "fields", "fifteen", "fifth", "fifty", "fight", "fighter", "fighting", "fights", "figure", "figured", "figures", "file", "filed", "files", "fill", "filled", "filling", "film", "films", "filthy", "final", "finally", "financial", "find", "finding", "finds", "fine", "finest", "finger", "fingers", "finish", "finished", "finishing", "fire", "fired", "fires", "firing", "firm", "first", "fish", "fishing", "fit", "fits", "five", "fix", "fixed", "fixing", "flag", "flash", "flat", "fleet", "flesh", "flew", "flies", "flight", "flip", "floating", "floor", "flow", "flower", "flowers", "fly", "flying", "focus", "focused", "folks", "follow", "followed", "following", "fond", "food", "fool", "fooled", "fooling", "foolish", "fools", "foot", "footage", "football", "for", "forbidden", "force", "forced", "forces", "foreign", "forest", "forever", "forget", "forgive", "forgot", "forgotten", "form", "formed", "former", "forms", "forth", "fortune", "forward", "foster", "fought", "foul", "found", "four", "fourth", "frame", "freak", "freaked", "freaking", "free", "freedom", "freeze", "freezing", "french", "fresh", "fried", "friend", "friendly", "friends", "from", "front", "frozen", "fruit", "fuck", "fucked", "fucking", "fuel", "full", "fully", "fun", "function", "funeral", "funny", "further", "future", "gain", "gambling", "game", "games", "gang", "garage", "garbage", "garden", "gas", "gate", "gates", "gather", "gathered", "gathering", "gave", "gay", "gear", "general", "generous", "genetic", "genius", "gentle", "gentleman", "gentlemen", "german", "germans", "get", "gets", "getting", "ghost", "ghosts", "giant", "gift", "gifts", "gimme", "girl", "girls", "give", "given", "gives", "giving", "glad", "glass", "glasses", "global", "glorious", "glory", "go", "goal", "god", "goddamn", "gods", "goes", "going", "gold", "golden", "golf", "gone", "gonna", "good", "goodbye", "goodness", "goods", "gorgeous", "got", "gotta", "gotten", "governor", "grab", "grabbed", "grace", "grade", "grand", "grandma", "grant", "grass", "grateful", "grave", "gravity", "gray", "great", "greater", "greatest", "greek", "green", "greet", "grew", "ground", "group", "groups", "grow", "growing", "grown", "grows", "grunting", "grunts", "guarantee", "guard", "guards", "guess", "guessing", "guest", "guests", "guide", "guilt", "guilty", "guitar", "gun", "guns", "gut", "guts", "guy", "guys", "gym", "ha", "habit", "hack", "had", "hair", "half", "halfway", "hall", "hand", "handed", "handle", "handled", "handling", "hands", "handsome", "hang", "hanging", "happen", "happened", "happening", "happens", "happier", "happily", "happiness", "happy", "hard", "harder", "hardest", "hardly", "harm", "has", "hat", "hate", "hated", "hates", "have", "having", "he", "head", "headed", "heading", "heads", "heal", "health", "healthy", "hear", "heard", "hearing", "hears", "heart", "hearts", "heat", "heaven", "heavily", "heavy", "heck", "held", "hell", "hello", "help", "helped", "helping", "helps", "her", "here", "hero", "heroes", "herself", "hey", "hi", "hid", "hidden", "hide", "hiding", "high", "higher", "highest", "highly", "hill", "him", "himself", "hire", "hired", "his", "history", "hit", "hits", "hitting", "ho", "hold", "holding", "holds", "hole", "holes", "holiday", "holy", "home", "homeless", "homes", "honest", "honestly", "honey", "honor", "honored", "hook", "hooked", "hop", "hope", "hoped", "hopefully", "hopes", "hoping", "horn", "horrible", "horror", "horse", "horses", "hospital", "host", "hostage", "hot", "hotel", "hour", "hours", "house", "houses", "how", "however", "hug", "huge", "human", "humans", "humble", "hundred", "hundreds", "hung", "hungry", "hunt", "hunting", "hurry", "hurt", "hurting", "hurts", "husband", "i", "ice", "idea", "ideal", "ideas", "identify", "identity", "idiot", "if", "ignore", "ill", "illegal", "image", "images", "imagine", "imagined", "immediate", "impact", "important", "impress", "impressed", "improve", "in", "inch", "inches", "incident", "include", "including", "increase", "indeed", "indian", "indians", "indicate", "industry", "infected", "influence", "inform", "informed", "initial", "injured", "inner", "innocent", "insane", "inside", "insist", "insisted", "inspired", "instead", "insult", "insurance", "intend", "intended", "intention", "interest", "interests", "interfere", "internal", "interrupt", "interview", "into", "introduce", "invented", "invisible", "invite", "invited", "inviting", "involve", "involved", "iron", "is", "island", "issue", "issues", "it", "italian", "item", "its", "itself", "jacket", "jail", "japanese", "jealous", "jerk", "jesus", "jet", "jewish", "job", "jobs", "join", "joined", "joining", "joint", "joke", "jokes", "journey", "joy", "judge", "judging", "judgment", "juice", "jump", "jumped", "jumping", "jungle", "junior", "junk", "jury", "just", "justice", "keep", "keeping", "keeps", "kept", "key", "keys", "kick", "kicked", "kicking", "kid", "kidding", "kidnap", "kidnapped", "kids", "kill", "killed", "killer", "killing", "kills", "kind", "kinda", "kindly", "kinds", "king", "kingdom", "kiss", "kissed", "kissing", "kitchen", "knees", "knew", "knife", "knock", "knocked", "knocking", "know", "knowing", "knowledge", "known", "knows", "la", "lab", "lack", "ladies", "lady", "laid", "lake", "land", "landed", "landing", "lands", "language", "large", "larger", "largest", "last", "late", "later", "latest", "laugh", "laughed", "laughing", "laughs", "laughter", "launch", "laundry", "law", "laws", "lawyer", "lawyers", "lay", "laying", "lazy", "lead", "leader", "leaders", "leading", "leads", "lean", "learn", "learned", "learning", "least", "leather", "leave", "leaves", "leaving", "lecture", "led", "left", "leg", "legal", "legend", "legs", "lend", "less", "lesson", "lessons", "let", "lets", "letter", "letters", "letting", "level", "levels", "liberty", "library", "license", "lick", "lie", "lied", "lies", "life", "lifetime", "lift", "light", "lightning", "lights", "like", "liked", "likely", "likes", "limit", "limited", "line", "lines", "link", "lion", "lips", "liquor", "list", "listen", "listened", "listening", "lit", "literally", "little", "live", "lived", "liver", "lives", "living", "load", "loaded", "loan", "local", "locate", "located", "location", "lock", "locked", "locker", "log", "lonely", "long", "longer", "look", "looked", "looking", "looks", "loose", "lord", "lose", "loser", "loses", "losing", "loss", "lost", "lot", "lots", "loud", "lousy", "love", "loved", "lovely", "lover", "loves", "loving", "low", "lower", "loyal", "loyalty", "luck", "lucky", "lunch", "lying", "machine", "machines", "mad", "made", "magazine", "magic", "magical", "maid", "mail", "main", "maintain", "major", "make", "makes", "makeup", "making", "male", "mama", "man", "manage", "managed", "manager", "manner", "many", "map", "march", "mark", "marked", "market", "marks", "marriage", "married", "marry", "marrying", "martial", "mask", "mass", "massive", "master", "match", "matches", "mate", "material", "math", "matter", "matters", "maximum", "may", "maybe", "mayor", "me", "meal", "mean", "meaning", "means", "meant", "measure", "meat", "media", "medical", "medicine", "meet", "meeting", "meets", "member", "members", "memories", "memory", "men", "mental", "mention", "mentioned", "mercy", "mere", "merely", "merry", "mess", "message", "messages", "messed", "messing", "met", "metal", "meters", "middle", "midnight", "might", "mighty", "mile", "miles", "military", "milk", "million", "millions", "mind", "minds", "mine", "minister", "minor", "minus", "minute", "minutes", "miracle", "mirror", "miserable", "miss", "missed", "missile", "missing", "mission", "mistake", "mistakes", "mix", "mixed", "mobile", "model", "modern", "mom", "moment", "moments", "mommy", "money", "monitor", "monkey", "monster", "monsters", "month", "months", "mood", "moon", "moral", "more", "morning", "mortal", "most", "mostly", "mother", "mothers", "motion", "motor", "mountain", "mountains", "mouth", "move", "moved", "movement", "moves", "movie", "movies", "moving", "much", "mud", "multiple", "mum", "murder", "murdered", "murderer", "murders", "muscle", "music", "musical", "must", "my", "myself", "mystery", "nail", "nailed", "naked", "name", "named", "names", "narrow", "nasty", "nation", "national", "native", "natural", "naturally", "nature", "naughty", "near", "nearest", "nearly", "necessary", "neck", "need", "needed", "needing", "needle", "needs", "negative", "neighbor", "neighbors", "neither", "nerve", "nervous", "network", "never", "new", "news", "newspaper", "next", "nice", "night", "nights", "nine", "no", "noble", "nobody", "noise", "none", "nonsense", "nor", "normal", "normally", "north", "nose", "not", "note", "notes", "nothing", "notice", "noticed", "now", "nowhere", "nuclear", "number", "numbers", "nurse", "nut", "nuts", "o", "obey", "object", "obsessed", "obvious", "obviously", "occurred", "ocean", "odd", "odds", "of", "off", "offer", "offered", "offering", "office", "officer", "officers", "official", "often", "oh", "oil", "ok", "okay", "old", "older", "oldest", "on", "once", "one", "ones", "online", "only", "onto", "ooh", "open", "opened", "opening", "opens", "operate", "operating", "operation", "opinion", "opposite", "option", "or", "orange", "order", "ordered", "orders", "ordinary", "organized", "original", "other", "others", "otherwise", "ought", "our", "ours", "ourselves", "out", "outer", "outside", "outta", "over", "owe", "owed", "owes", "own", "owned", "owner", "owns", "oxygen", "pack", "package", "packed", "packing", "page", "pages", "paid", "pain", "painful", "paint", "painted", "painting", "pair", "palace", "panic", "panting", "pants", "paper", "papers", "pardon", "parents", "park", "parked", "parking", "part", "parties", "partner", "partners", "parts", "party", "pass", "passed", "passes", "passing", "passion", "past", "patch", "path", "pathetic", "patient", "patients", "patrol", "pattern", "pay", "paying", "payment", "pays", "peace", "peaceful", "pee", "pen", "penny", "people", "per", "percent", "perfect", "perfectly", "perform", "performed", "perhaps", "period", "permanent", "permit", "person", "personal", "personnel", "persuade", "pet", "petty", "phase", "phone", "phones", "photo", "photos", "physical", "piano", "pick", "picked", "picking", "picks", "picture", "pictures", "pie", "piece", "pieces", "pig", "pile", "pills", "pilot", "pin", "pink", "pipe", "piss", "pissed", "pit", "pitch", "pity", "pizza", "place", "placed", "places", "plain", "plan", "plane", "planes", "planet", "planned", "planning", "plans", "plant", "planted", "plants", "plastic", "plate", "play", "played", "player", "players", "playing", "plays", "pleasant", "please", "pleased", "pleasure", "plenty", "plot", "plug", "plus", "pocket", "point", "pointed", "pointing", "points", "poison", "poisoned", "poker", "police", "policy", "polish", "political", "politics", "pool", "poor", "pop", "popped", "popular", "pork", "port", "position", "positive", "possible", "possibly", "post", "posted", "pot", "potential", "pound", "pounds", "pour", "powder", "power", "powerful", "powers", "practical", "practice", "praise", "pray", "prayer", "praying", "precious", "precisely", "prefer", "pregnant", "prepare", "prepared", "preparing", "presence", "present", "presents", "president", "press", "pressure", "pretend", "pretty", "prevent", "previous", "price", "pride", "priest", "primary", "prime", "prince", "princess", "print", "prints", "prior", "prison", "prisoner", "prisoners", "private", "prize", "pro", "probably", "problem", "problems", "procedure", "proceed", "process", "produce", "produced", "product", "professor", "profile", "profit", "program", "progress", "project", "promise", "promised", "promises", "proof", "proper", "properly", "property", "propose", "protect", "protected", "proud", "prove", "proved", "proven", "proves", "provide", "provided", "public", "pull", "pulled", "pulling", "pulls", "pulse", "pump", "punch", "punish", "punished", "punk", "pure", "purpose", "pursue", "push", "pushed", "pushing", "pussy", "put", "puts", "putting", "quality", "quarter", "queen", "question", "questions", "quick", "quickly", "quiet", "quietly", "quit", "quite", "rabbit", "race", "racing", "radiation", "radio", "rain", "raise", "raised", "raising", "ran", "random", "range", "rape", "raped", "rare", "rarely", "rat", "rate", "rather", "rats", "raw", "re", "reach", "reached", "reaches", "reaching", "reaction", "read", "reading", "ready", "real", "reality", "realize", "realized", "really", "rear", "reason", "reasons", "recall", "receive", "received", "receiving", "recent", "recently", "reckon", "recognize", "recommend", "record", "recorded", "recording", "records", "recover", "recovered", "red", "referring", "refuse", "refused", "regarding", "regret", "regular", "related", "relax", "release", "released", "religion", "religious", "rely", "remain", "remaining", "remains", "remember", "remembers", "remind", "reminded", "reminds", "remote", "remove", "removed", "rent", "rented", "repair", "repay", "repeat", "replace", "replaced", "report", "reported", "reporter", "reporting", "reports", "represent", "request", "requested", "require", "required", "requires", "rescue", "research", "resist", "resources", "respect", "respond", "response", "rest", "restore", "result", "results", "retired", "return", "returned", "returning", "reveal", "revealed", "revenge", "reverse", "review", "reward", "rice", "rich", "rid", "ride", "riding", "right", "rights", "ring", "ringing", "rings", "rip", "ripped", "rise", "rising", "risk", "river", "road", "roads", "rob", "robbed", "robbery", "robot", "rock", "rocket", "rocks", "rode", "role", "roll", "rolled", "rolling", "romantic", "roof", "room", "rooms", "root", "rope", "rose", "rotten", "rough", "round", "rounds", "route", "routine", "row", "royal", "rub", "rubber", "rude", "ruin", "ruined", "ruining", "rule", "ruled", "rules", "rumor", "rumors", "run", "running", "runs", "rush", "russian", "russians", "sack", "sacred", "sacrifice", "sad", "safe", "safely", "safer", "safety", "said", "sail", "sake", "sale", "sales", "salt", "same", "sample", "sand", "sang", "sat", "satellite", "satisfied", "save", "saved", "saving", "saw", "say", "saying", "says", "scale", "scan", "scare", "scared", "scares", "scaring", "scary", "scene", "schedule", "scheduled", "school", "schools", "science", "score", "scratch", "scream", "screaming", "screen", "screw", "screwed", "screwing", "sea", "seal", "sealed", "search", "searched", "searching", "season", "seat", "seats", "second", "seconds", "secret", "secretary", "secrets", "section", "secure", "security", "see", "seeing", "seek", "seeking", "seem", "seemed", "seems", "seen", "sees", "self", "selfish", "sell", "selling", "sells", "send", "sending", "sends", "senior", "sense", "sensitive", "sent", "sentence", "separate", "separated", "sergeant", "serial", "series", "serious", "seriously", "servant", "serve", "served", "service", "services", "serving", "set", "sets", "setting", "settle", "settled", "seven", "several", "severe", "sex", "sexual", "sexy", "shadow", "shake", "shaking", "shall", "shame", "shape", "share", "shared", "sharing", "sharp", "shave", "she", "shed", "sheep", "shell", "shelter", "sheriff", "shield", "shift", "shine", "shining", "ship", "ships", "shirt", "shit", "shitty", "shock", "shocked", "shoe", "shoes", "shoot", "shooting", "shop", "shopping", "short", "shot", "shots", "should", "shoulder", "shout", "shouting", "shove", "show", "showed", "shower", "showing", "shown", "shows", "shut", "shy", "sick", "side", "sides", "sighs", "sight", "sign", "signal", "signature", "signed", "signing", "signs", "silence", "silent", "silly", "silver", "similar", "simple", "simply", "sin", "since", "sing", "singing", "single", "sink", "sins", "sir", "sister", "sisters", "sit", "site", "sits", "sitting", "situation", "six", "sixth", "size", "skill", "skills", "skin", "skip", "skull", "sky", "slap", "slave", "slaves", "sleep", "sleeping", "slept", "slice", "slide", "slight", "slightly", "slip", "slipped", "slow", "slowly", "small", "smaller", "smart", "smarter", "smash", "smashed", "smell", "smells", "smile", "smiling", "smoke", "smoking", "smooth", "snake", "snap", "sneak", "sneaking", "snow", "so", "soccer", "social", "society", "soft", "solar", "sold", "soldier", "soldiers", "solid", "solution", "solve", "solved", "some", "somebody", "someday", "somehow", "someone", "someplace", "something", "sometime", "sometimes", "somewhat", "somewhere", "son", "song", "songs", "sons", "soon", "sooner", "sore", "sorry", "sort", "sorts", "soul", "souls", "sound", "sounded", "sounds", "soup", "source", "south", "southern", "soviet", "space", "spanish", "spare", "speak", "speaking", "speaks", "special", "species", "specific", "speech", "speed", "spell", "spend", "spending", "spent", "spin", "spirit", "spirits", "spiritual", "spit", "spite", "split", "spoil", "spoke", "spoken", "sports", "spot", "spotted", "spread", "spreading", "spring", "spy", "squad", "square", "squeeze", "stab", "stabbed", "stable", "staff", "stage", "stairs", "stake", "stand", "standard", "standing", "stands", "star", "stare", "staring", "stars", "start", "started", "starting", "starts", "state", "statement", "states", "station", "status", "stay", "stayed", "staying", "stays", "steady", "steal", "stealing", "steel", "step", "stepped", "stepping", "steps", "stick", "sticking", "sticks", "still", "stock", "stole", "stolen", "stomach", "stone", "stones", "stood", "stop", "stopped", "stopping", "stops", "storage", "store", "stories", "storm", "story", "straight", "strange", "stranger", "strangers", "street", "streets", "strength", "stress", "stretch", "strictly", "strike", "string", "strip", "strong", "stronger", "struck", "structure", "struggle", "stuck", "student", "students", "studied", "studio", "study", "studying", "stuff", "stuffed", "stupid", "style", "subject", "subtitles", "success", "such", "suck", "sucked", "sucking", "sudden", "suddenly", "sue", "suffer", "suffered", "suffering", "sugar", "suggest", "suggested", "suggests", "suicide", "suit", "suits", "summer", "sun", "super", "superior", "supplies", "supply", "support", "suppose", "supposed", "sure", "surely", "surface", "surgery", "surprise", "surprised", "surrender", "survival", "survive", "survived", "suspect", "suspected", "suspects", "swallow", "swear", "sweat", "sweep", "sweet", "swim", "swimming", "swing", "switch", "switched", "sword", "swore", "sworn", "symbol", "system", "systems", "table", "tag", "tail", "take", "taken", "takes", "taking", "tale", "talent", "talented", "talk", "talked", "talking", "talks", "tall", "tank", "tap", "tape", "target", "task", "taste", "tastes", "tattoo", "taught", "tax", "taxi", "tea", "teach", "teacher", "teachers", "teaching", "team", "teams", "tear", "tears", "technical", "teenage", "teeth", "telephone", "tell", "telling", "tells", "temple", "temporary", "ten", "tend", "tennis", "term", "terms", "terrible", "terribly", "terrific", "terrorist", "test", "tested", "testify", "testimony", "testing", "tests", "text", "than", "thank", "thanks", "that", "the", "theater", "thee", "their", "them", "theme", "then", "theory", "therapy", "there", "therefore", "these", "they", "thick", "thief", "thin", "thing", "things", "think", "thinking", "thinks", "third", "thirty", "this", "those", "thou", "though", "thought", "thoughts", "thousand", "thousands", "threat", "threaten", "three", "threw", "throat", "through", "throw", "throwing", "thrown", "thus", "thy", "ticket", "tickets", "tie", "tied", "ties", "tight", "till", "time", "times", "timing", "tiny", "tip", "tire", "tired", "tires", "tissue", "title", "to", "toast", "today", "together", "toilet", "told", "tomorrow", "ton", "tone", "tongue", "tonight", "tons", "too", "took", "tools", "tooth", "top", "tore", "torn", "torture", "tortured", "toss", "total", "totally", "touch", "touched", "touching", "tough", "tour", "toward", "towards", "tower", "town", "toy", "trace", "traces", "track", "tracked", "tracking", "tracks", "trade", "tradition", "traffic", "tragic", "trail", "train", "trained", "training", "transfer", "transport", "trap", "trapped", "trash", "trauma", "travel", "traveled", "traveling", "treasure", "treat", "treated", "treating", "treatment", "tree", "trees", "trial", "trick", "tricks", "tried", "tries", "trigger", "trip", "troops", "trouble", "troubles", "truck", "true", "truly", "trunk", "trust", "trusted", "truth", "try", "trying", "tune", "tunnel", "turn", "turned", "turning", "turns", "twelve", "twenty", "twice", "twist", "twisted", "two", "type", "types", "typical", "u", "ugly", "uh", "ultimate", "unable", "uncle", "under", "unhappy", "uniform", "union", "unique", "unit", "units", "universe", "unknown", "unless", "unlike", "until", "unto", "unusual", "up", "upon", "upper", "upset", "upside", "upstairs", "urgent", "us", "use", "used", "useful", "useless", "uses", "using", "usual", "usually", "vacation", "valuable", "value", "vampire", "van", "various", "vast", "vehicle", "version", "versus", "very", "vessel", "vice", "victim", "victims", "victory", "video", "view", "village", "violence", "violent", "virus", "vision", "visit", "visited", "visiting", "visual", "vital", "voice", "voices", "vote", "voted", "wait", "waited", "waiting", "wake", "wakes", "waking", "walk", "walked", "walking", "walks", "wall", "walls", "wandering", "wanna", "want", "wanted", "wanting", "wants", "war", "warm", "warn", "warned", "warning", "warrant", "warrior", "was", "wash", "washed", "washing", "waste", "wasted", "wasting", "watch", "watched", "watching", "water", "wave", "waves", "way", "ways", "we", "weak", "weapon", "weapons", "wear", "wearing", "wears", "weather", "wedding", "wee", "week", "weekend", "weeks", "weight", "weird", "welcome", "well", "went", "were", "west", "western", "wet", "what", "whatever", "wheel", "wheels", "when", "whenever", "where", "wherever", "whether", "which", "while", "whip", "white", "who", "whoever", "whole", "whom", "whore", "whose", "why", "wicked", "wide", "wife", "wild", "will", "willing", "win", "wind", "window", "windows", "winds", "wine", "wing", "wings", "winner", "winning", "wins", "winter", "wipe", "wiped", "wire", "wisdom", "wise", "wish", "wished", "wishes", "witch", "with", "within", "without", "witness", "witnessed", "witnesses", "wives", "woke", "wolf", "woman", "women", "won", "wonder", "wondered", "wonderful", "wondering", "wood", "wooden", "woods", "word", "words", "wore", "work", "worked", "workers", "working", "works", "world", "worn", "worried", "worries", "worry", "worrying", "worse", "worst", "worth", "worthy", "would", "wound", "wounded", "wounds", "wrap", "wrapped", "write", "writer", "writes", "writing", "written", "wrong", "wrote", "y", "ya", "yard", "yards", "ye", "yeah", "year", "years", "yell", "yelling", "yellow", "yes", "yesterday", "yet", "you", "young", "younger", "your", "yours", "yourself", "youth", "zero", "zone"]);
 
-            function startBonusRound() {
-                if (Math.random() > 0.5) { startEnemyAgentRound(); }
-                else { startInterlude(); }
-            }
+document.addEventListener('DOMContentLoaded', () => {
+  const $ = id => document.getElementById(id);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
 
-            function startInterlude() {
-                gameScreen.classList.add('hidden');
-                interludeScreen.classList.remove('hidden');
-                interludeFeedback.textContent = ''; interludeInput.value = ''; interludeInput.focus();
-                const previousLevel = gameDataCopy[currentLevelIndex];
-                const interludeData = previousLevel.questions[Math.floor(Math.random() * previousLevel.questions.length)];
-                
-                const interludeType = Math.random() > 0.5 ? 'scramble' : 'typing';
-                if (interludeType === 'scramble') {
-                    scrambleMode.classList.remove('hidden'); typingMode.classList.add('hidden');
-                    interludeInstruction.textContent = 'Unscramble the word for bonus points!';
-                    let scrambled = interludeData.word.split('').sort(() => 0.5 - Math.random()).join('');
-                    scrambledWord.innerHTML = '';
-                    scrambled.split('').forEach((letter, i) => { const span = document.createElement('span'); span.textContent = letter; span.className = 'scrambled-letter'; span.style.animationDelay = `${i * 0.05}s`; scrambledWord.appendChild(span); });
-                } else {
-                    scrambleMode.classList.add('hidden'); typingMode.classList.remove('hidden');
-                    interludeInstruction.textContent = 'Memorize and type the word!';
-                    wordToType.textContent = interludeData.word; wordToType.classList.add('word-reveal');
-                    interludeInput.style.visibility = 'hidden';
-                    setTimeout(() => { wordToType.classList.remove('word-reveal'); wordToType.textContent = '?????'; interludeInput.style.visibility = 'visible'; interludeInput.focus(); }, 4000);
-                }
-                interludeClue.textContent = `Clue: ${interludeData.clue}`;
-                submitInterludeButton.onclick = () => endInterlude(true, interludeData);
-                startTimer(INTERLUDE_TIME, interludeTimerBar, () => endInterlude(false, interludeData));
-            }
+  const KEY='spellSleuthState_v4';
+  const LIVES=3, QTIME=18, STREAK_TARGET=4, INTERLUDE_TIME=22, ENEMY_TIME=9, PROOF_TIME=16;
+  const MISSIONS_PER_RUN=6;
+  const XP_CORRECT=12, XP_INTERLUDE=28, XP_ENEMY_MAX=44, XP_PROOF=26;
+  const AVATARS={'🕵️':1,'🕵️‍♀️':2,'🦊':3,'🐺':5,'🦉':7,'🐲':10,'🤖':13,'👑':16};
+  const GADGETS={
+    decoy:{name:'Decoy Deflector',icon:'📡',cost:2,desc:'Removes one wrong option from a question.'},
+    freeze:{name:'Time-Freeze Watch',icon:'⏱️',cost:2,desc:'Adds 6 seconds to the current timer.'},
+    stunner:{name:'Spectre Stunner',icon:'💥',cost:3,desc:'Deals one extra hit in the final battle.'}
+  };
+  const ACH={
+    first:{name:'Rookie Agent',desc:'Complete your first case run.'},
+    hot:{name:'Hot Streak',desc:'Solve 5 words in a row.'},
+    sharp:{name:'Sharp Eye',desc:'Solve 10 words in a row.'},
+    flawless:{name:'Flawless',desc:'Finish a run without losing a life.'},
+    wire:{name:'Down to the Wire',desc:'Win the final battle at 1 HP.'},
+    field:{name:'Field Agent',desc:'Reach Agent Level 5.'},
+    spymaster:{name:'Spymaster',desc:'Reach Agent Level 10.'},
+    qfav:{name:"Q's Favorite",desc:'Use 3 gadgets in the field.'},
+    codebreaker:{name:'Codebreaker',desc:'Beat an enemy decrypt in under 3 seconds.'},
+    proofer:{name:'Eagle-Eyed Editor',desc:'Nail 5 proofreading reports.'},
+    curator:{name:'Case Builder',desc:'Create a custom mission.'},
+    graduate:{name:'Cleared for Duty',desc:'Master 25 words.'}
+  };
+  const SPACING=[1,1,2,3,5,8]; // Leitner box -> runs until due again
+  const MASTER_BOX=5;
 
-            function endInterlude(submitted, interludeData) {
-                clearInterval(timerInterval);
-                const correct = interludeInput.value.toLowerCase().trim() === interludeData.word;
-                if (submitted) {
-                    if (correct) { addXp(25); interludeFeedback.textContent = "Correct! +25 XP"; interludeFeedback.style.color = '#22c55e'; } 
-                    else { interludeFeedback.textContent = `Incorrect. The word was "${interludeData.word}".`; interludeFeedback.style.color = '#ef4444'; }
-                } else { interludeFeedback.textContent = `Time's up! The word was "${interludeData.word}".`; interludeFeedback.style.color = '#facc15'; }
-                setTimeout(transitionToNextLevel, 2000);
-            }
+  // ---------- WORD INDEX (word -> full question object) ----------
+  let WORD_INDEX={};
+  function reindex(){
+    WORD_INDEX={};
+    GAME_DATA.forEach(m=>m.questions.forEach(q=>{ WORD_INDEX[q.word]=q; }));
+    (S.customLists||[]).forEach(list=>list.words.forEach(q=>{ if(!WORD_INDEX[q.word]) WORD_INDEX[q.word]=q; }));
+  }
 
-            function startEnemyAgentRound() {
-                gameScreen.classList.add('hidden');
-                enemyAgentScreen.classList.remove('hidden');
-                enemyAgentFeedback.textContent = '';
-                const buttons = [isCorrectButton, isIncorrectButton];
-                buttons.forEach(b => b.disabled = false);
+  // ---------- auto decoy generator (ported + dictionary-guarded) ----------
+  const VOWELS='aeiou';
+  function genDecoys(word,k=3){
+    const w=word.toLowerCase(), n=w.length, cand={};
+    const add=(s,score)=>{ if(s && s!==w && /^[a-z]+$/.test(s) && Math.abs(s.length-n)<=2) cand[s]=Math.max(cand[s]??-99,score); };
+    for(let i=1;i<n;i++) if(w[i]===w[i-1] && !VOWELS.includes(w[i])) add(w.slice(0,i)+w.slice(i+1), i>1?9:5);
+    for(let i=1;i<n-1;i++) if(!VOWELS.includes(w[i]) && VOWELS.includes(w[i-1]) && VOWELS.includes(w[i+1])) add(w.slice(0,i+1)+w[i]+w.slice(i+1),6);
+    if(w.includes('ie')){const j=w.indexOf('ie'); add(w.slice(0,j)+'ei'+w.slice(j+2),9);}
+    if(w.includes('ei')){const j=w.indexOf('ei'); add(w.slice(0,j)+'ie'+w.slice(j+2),9);}
+    [['ance','ence',9],['ence','ance',9],['able','ible',9],['ible','able',9],['cede','ceed',8],
+     ['sede','cede',8],['ary','ery',7],['ery','ary',7],['tion','sion',6],['ely','ley',5],['ous','ious',4]]
+      .forEach(([a,b,sc])=>{ if(w.endsWith(a)) add(w.slice(0,-a.length)+b,sc); });
+    let seenFirst=false;
+    for(let i=0;i<n;i++){ if(VOWELS.includes(w[i])){ const first=!seenFirst; seenFirst=true; if(i===0) continue;
+      for(const v of 'aeiou') if(v!==w[i]){ const pos=i/n; const sc=(0.3<=pos&&pos<=0.85&&!first)?7:(!first?4:1); add(w.slice(0,i)+v+w.slice(i+1),sc);} } }
+    for(let i=1;i<n;i++){ const pos=i/n; add(w.slice(0,i)+w.slice(i+1), (0.3<=pos&&pos<=0.85)?6:3); }
+    for(let i=1;i<n-1;i++) add(w.slice(0,i)+w[i+1]+w[i]+w.slice(i+2),5);
+    // keep genuine misspellings (not common real words), rank by plausibility
+    const valid=Object.entries(cand).filter(([s])=>!COMMON.has(s)).sort((a,b)=> b[1]-a[1] || Math.abs(a[0].length-n)-Math.abs(b[0].length-n) || (a[0]<b[0]?-1:1));
+    const out=[];
+    for(const [s,sc] of valid){ if(s[0]===w[0] || sc>=8) out.push(s); if(out.length>=k) break; }
+    if(out.length<k) for(const [s] of valid){ if(!out.includes(s)) out.push(s); if(out.length>=k) break; }
+    // absolute fallback: pad with simple edits if somehow short
+    let pad=0;
+    while(out.length<k){ const s=w+'e'.repeat(++pad); if(!out.includes(s)) out.push(s); if(pad>3) break; }
+    return out.slice(0,k);
+  }
+  function tierByLength(w){ return w.length>=11?3 : (w.length>=8?2:1); }
 
-                const question = gameDataCopy[currentLevelIndex].questions[Math.floor(Math.random() * gameDataCopy[currentLevelIndex].questions.length)];
-                const isActuallyCorrect = Math.random() > 0.4;
-                const wordToShow = isActuallyCorrect ? question.word : question.decoys[0];
-                let revealedChars = 0;
+  // ---------- state ----------
+  let S;
+  function defaultState(){ const a={}; for(const k in ACH) a[k]=false;
+    return {highScore:0,level:1,xp:0,intel:0,solved:0,gadgetsUsed:0,proofHits:0,
+      equipped:null,unlocked:['🕵️'],avatar:'🕵️',ach:a,sound:true,motion:true,
+      wordStats:{},customLists:[],runsPlayed:0}; }
+  function load(){ let saved=null; try{saved=JSON.parse(localStorage.getItem(KEY));}catch(e){}
+    S=Object.assign(defaultState(),saved||{});
+    S.ach=Object.assign({},defaultState().ach,S.ach||{});
+    if(!Array.isArray(S.unlocked)) S.unlocked=['🕵️'];
+    if(typeof S.wordStats!=='object'||!S.wordStats) S.wordStats={};
+    if(!Array.isArray(S.customLists)) S.customLists=[];
+    document.body.classList.toggle('nomotion',!S.motion); }
+  function save(){ try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){} }
 
-                const decryptInterval = setInterval(() => {
-                    revealedChars++;
-                    decryptingWordContainer.innerHTML = '';
-                    for(let i=0; i < wordToShow.length; i++) {
-                        const span = document.createElement('span');
-                        span.className = 'decrypting-letter';
-                        span.style.animationDelay = `${i * 0.02}s`;
-                        span.textContent = i < revealedChars ? wordToShow[i] : '█';
-                        decryptingWordContainer.appendChild(span);
-                    }
-                    if (revealedChars > wordToShow.length) clearInterval(decryptInterval);
-                }, 300);
+  // ---------- audio ----------
+  let actx=null;
+  function beep(f,dur=0.09,type='sine',vol=0.06){ if(!S.sound) return;
+    try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+      const o=actx.createOscillator(),g=actx.createGain(); o.type=type; o.frequency.value=f;
+      o.connect(g); g.connect(actx.destination); g.gain.setValueAtTime(vol,actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001,actx.currentTime+dur); o.start(); o.stop(actx.currentTime+dur);
+    }catch(e){} }
+  const sfx={ click:()=>beep(320,0.05,'triangle',0.04),
+    good:()=>{beep(660,0.08); setTimeout(()=>beep(990,0.1),70);},
+    bad:()=>beep(200,0.16,'sawtooth',0.05),
+    level:()=>[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.12),i*90)),
+    hit:()=>beep(140,0.12,'square',0.05),
+    win:()=>[523,659,784,1046,1318].forEach((f,i)=>setTimeout(()=>beep(f,0.15,'triangle'),i*110)) };
 
-                const roundStartTime = Date.now();
-                const onAnswer = (choseCorrect) => {
-                    clearInterval(decryptInterval);
-                    buttons.forEach(b => b.disabled = true);
-                    if (choseCorrect === isActuallyCorrect) {
-                        const timeTaken = (Date.now() - roundStartTime) / 1000;
-                        const bonusXp = Math.max(10, 40 - Math.floor(timeTaken * 3));
-                        addXp(bonusXp);
-                        enemyAgentFeedback.textContent = `Correct! +${bonusXp} XP`;
-                        enemyAgentFeedback.style.color = '#22c55e';
-                    } else {
-                        enemyAgentFeedback.textContent = `Incorrect! The word was "${wordToShow}".`;
-                        enemyAgentFeedback.style.color = '#ef4444';
-                    }
-                    setTimeout(transitionToNextLevel, 2000);
-                };
+  const motion=()=>S.motion && !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function confetti(){ if(!motion()) return; const c=$('confetti'); const chars='SPELLSLEUTH✓★'.split('');
+    const cols=['var(--badge)','var(--decode)','var(--cipher)','var(--badge-2)'];
+    for(let i=0;i<60;i++){ const s=document.createElement('span'); s.className='conf';
+      s.textContent=chars[Math.floor(Math.random()*chars.length)];
+      s.style.left=Math.random()*100+'vw'; s.style.top=(-10-Math.random()*20)+'vh';
+      s.style.color=cols[i%cols.length]; s.style.fontSize=(12+Math.random()*20)+'px';
+      s.style.setProperty('--r',(Math.random()*720-360)+'deg');
+      s.style.animationDuration=(1.8+Math.random()*1.8)+'s'; s.style.animationDelay=(Math.random()*0.4)+'s';
+      c.appendChild(s); setTimeout(()=>s.remove(),4200); } }
+  function shake(el){ if(motion()){ el.classList.add('shake'); setTimeout(()=>el.classList.remove('shake'),420); } }
 
-                isCorrectButton.onclick = () => onAnswer(true);
-                isIncorrectButton.onclick = () => onAnswer(false);
-                startTimer(ENEMY_AGENT_TIME, enemyAgentTimerBar, () => {
-                    clearInterval(decryptInterval);
-                    buttons.forEach(b => b.disabled = true);
-                    enemyAgentFeedback.textContent = `Time's up! The word was "${wordToShow}".`;
-                    enemyAgentFeedback.style.color = '#facc15';
-                    setTimeout(transitionToNextLevel, 2000);
-                });
-            }
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 
-            function transitionToNextLevel() {
-                enemyAgentScreen.classList.add('hidden');
-                interludeScreen.classList.add('hidden');
-                currentLevelIndex++;
-                currentQuestionIndex = 0;
-                if (currentLevelIndex >= gameDataCopy.length) { endGame(false); } 
-                else { gameScreen.classList.remove('hidden'); loadQuestion(); }
-            }
-            
-            function startTimer(duration, barElement, onEnd) {
-                barElement.style.width = '100%';
-                barElement.style.transition = `width ${duration}s linear`;
-                requestAnimationFrame(() => { barElement.style.width = '0%'; });
-                timerInterval = setTimeout(onEnd, duration * 1000);
-            }
-            
-            function handleTimeout() { selectAnswer(null); }
+  const SCREENS=['home','play','interlude','enemy','proof','boss'];
+  function show(id){ SCREENS.forEach(s=>$(s).classList.toggle('hidden',s!==id));
+    const el=$(id); el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); }
+  function goHome(){ if(run) clearTimeout(run.timer); refreshHome(); show('home'); }
 
-            function endGame(ranOutOfLives) {
-                clearInterval(timerInterval);
-                gameScreen.classList.add('hidden'); interludeScreen.classList.add('hidden'); enemyAgentScreen.classList.add('hidden'); bossScreen.classList.remove('hidden');
-                if (currentXp > playerState.highScore) { playerState.highScore = currentXp; }
-                missionXpGain.textContent = currentXp;
-                checkAchievement('first_mission');
-                if (!tookDamage) checkAchievement('perfect_mission');
-                savePlayerState(); updatePlayerUI();
-                if (ranOutOfLives) {
-                    battleLogText.textContent = "Mission failed. You ran out of lives."; battleLogText.style.color = '#ef4444';
-                    showPostBattle(false);
-                } else { startBossBattle(); }
-            }
+  let run=null;
+  function startTimer(sec,barEl,onEnd){ barEl.style.transition='none'; barEl.style.width='100%'; void barEl.offsetWidth;
+    barEl.style.transition=`width ${sec}s linear`; barEl.style.width='0%';
+    run.timer=setTimeout(onEnd,sec*1000); run.timerBar=barEl; run.timerCb=onEnd; run.timerSec=sec; }
+  function stopTimer(){ if(run) clearTimeout(run.timer); }
 
-            function startBossBattle() {
-                gadgetBattleLog.textContent = '';
-                if (equippedGadget === 'spectre_stunner') {
-                    gadgetBattleLog.textContent = 'Spectre Stunner is charged! 💥';
-                }
-                playerSprite.textContent = playerState.selectedAvatar;
-                battleQuestionSection.classList.add('hidden');
-                let playerHP = lives;
-                let bossHP = missedWords.length > 0 ? missedWords.length : 1;
-                const totalBossHP = bossHP;
+  function xpForLevel(lv){ return Math.floor(100*Math.pow(1.2,lv-1)); }
+  function masteredCount(){ return Object.values(S.wordStats).filter(s=>s.box>=MASTER_BOX).length; }
+  function dueCount(){ let n=0; for(const w in S.wordStats){ const st=S.wordStats[w]; if(st.box<MASTER_BOX && st.dueRun<=S.runsPlayed) n++; } return n; }
 
-                playerHpBar.style.width = `${(playerHP / GAME_LIVES) * 100}%`; bossHpBar.style.width = '100%';
-                battleLogText.textContent = "The Spelling Spectre appears!";
-                
-                shuffleArray(missedWords);
-                let battleWords = missedWords.length > 0 ? [...missedWords] : [{ word: "congratulations", decoys: ["congradulations", "congraduelations"], rule: "You spelled everything right!", sentence: "You earned these _____!" }];
-                let currentBattleWordIndex = 0;
+  function refreshHome(){
+    $('home-avatar').textContent=S.avatar;
+    $('home-rank').textContent=`Agent · Level ${S.level}`;
+    const need=xpForLevel(S.level);
+    $('home-xp').textContent=`${S.xp} / ${need} XP`;
+    $('home-xp-bar').style.width=Math.min(100,(S.xp/need)*100)+'%';
+    $('home-best').textContent=S.highScore;
+    $('home-intel').textContent=S.intel;
+    $('home-solved').textContent=S.solved;
+    $('home-mastered').textContent=masteredCount();
+    $('home-gadget').textContent=S.equipped?GADGETS[S.equipped].name:'None';
+    $('p-fighter').textContent=S.avatar;
+    const due=dueCount();
+    $('review-count').textContent = due?`(${due} due)`:'';
+    $('btn-review').disabled = Object.keys(S.wordStats).length<4 && due===0;
+    renderCustomLists();
+  }
 
-                function nextBattleTurn() {
-                    if (playerHP <= 0 || bossHP <= 0) { endBossBattle(playerHP > 0, playerHP); return; }
-                    battleQuestionSection.classList.remove('hidden');
-                    const question = battleWords[currentBattleWordIndex];
-                    battleLogText.textContent = "Counter the Spectre's attack!";
-                    battleQuestionText.textContent = question.sentence ? question.sentence.replace('_____', '...') : "Quickly, which is correct?";
-                    battleOptionsContainer.innerHTML = '';
-                    const options = shuffleArray([...question.decoys, question.word]);
-                    options.forEach(option => { const button = document.createElement('button'); button.textContent = option; button.className = 'btn w-full bg-slate-700 hover:bg-slate-600 border border-slate-500 font-semibold py-3 px-4 rounded-lg text-lg'; button.onclick = (e) => handleBattleAnswer(e.target, question.word); battleOptionsContainer.appendChild(button); });
-                }
+  function addXp(n){ run.xp+=n; S.xp+=n; let need=xpForLevel(S.level), leveled=false;
+    while(S.xp>=need){ S.xp-=need; S.level++; need=xpForLevel(S.level); leveled=true; unlockAvatars(); }
+    if(leveled){ sfx.level(); const p=$('play-panel'); if(p){p.classList.remove('levelflash'); void p.offsetWidth; p.classList.add('levelflash');}
+      toast('⭐ Promoted!',`You reached Agent Level ${S.level}.`);
+      if(S.level>=5) unlock('field'); if(S.level>=10) unlock('spymaster'); }
+    save(); }
+  function unlockAvatars(){ for(const a in AVATARS){ if(S.level>=AVATARS[a] && !S.unlocked.includes(a)) S.unlocked.push(a); } }
 
-                function handleBattleAnswer(button, correctAnswer) {
-                    Array.from(battleOptionsContainer.children).forEach(b => b.disabled = true);
-                    if (button.textContent === correctAnswer) {
-                        bossHP--; bossSprite.classList.add('sprite-hit'); battleLogText.textContent = "Direct hit!"; button.classList.add('btn-correct');
-                        if (equippedGadget === 'spectre_stunner') {
-                            bossHP--; gadgetBattleLog.textContent = 'Spectre Stunner lands a critical hit! 💥'; equippedGadget = null; // one-time use
-                            useGadget(); // To count towards achievement
-                        }
-                    } else {
-                        playerHP--; playerSprite.classList.add('sprite-hit'); battleLogText.textContent = "You took damage!"; button.classList.add('btn-incorrect');
-                    }
-                    playerHpBar.style.width = `${(playerHP / GAME_LIVES) * 100}%`; bossHpBar.style.width = `${(bossHP / totalBossHP) * 100}%`;
-                    setTimeout(() => { playerSprite.classList.remove('sprite-hit'); bossSprite.classList.remove('sprite-hit'); currentBattleWordIndex = (currentBattleWordIndex + 1) % battleWords.length; nextBattleTurn(); }, 1500);
-                }
-                setTimeout(nextBattleTurn, 2000);
-            }
+  // ---------- adaptive review bookkeeping ----------
+  function recordResult(word, correct){
+    const st=S.wordStats[word]||{box:0,seen:0,correct:0,missed:0,dueRun:0};
+    st.seen++;
+    if(correct){ st.correct++; st.box=Math.min(MASTER_BOX,st.box+1); }
+    else { st.missed++; st.box=Math.max(0,st.box-2); }
+    st.dueRun = S.runsPlayed + SPACING[Math.min(SPACING.length-1,st.box)];
+    S.wordStats[word]=st;
+  }
 
-            function endBossBattle(playerWon, finalHP) {
-                battleQuestionSection.classList.add('hidden');
-                if (playerWon) {
-                    battleLogText.textContent = "VICTORY! The Spelling Spectre is vanquished!"; battleLogText.style.color = '#22c55e';
-                    if (finalHP === 1) checkAchievement('comeback_kid');
-                } else { battleLogText.textContent = "DEFEATED. The Spectre's spelling was too powerful."; battleLogText.style.color = '#ef4444'; }
-                showPostBattle(playerWon);
-            }
+  // ---------- run builders ----------
+  function maxTierForLevel(){ return S.level<4?2 : 3; }
+  function buildStandardRun(){
+    const maxT=maxTierForLevel();
+    const pool=JSON.parse(JSON.stringify(GAME_DATA)); shuffle(pool);
+    const missions=[];
+    for(const m of pool){
+      const qs=shuffle(m.questions.filter(q=>(q.tier||2)<=maxT)).slice(0,6);
+      if(qs.length>=2) missions.push({levelName:m.levelName, questions:qs});
+      if(missions.length>=MISSIONS_PER_RUN) break;
+    }
+    return missions;
+  }
+  function buildReviewRun(){
+    // gather seen, non-mastered words, weakest/most-due first
+    const entries=Object.keys(S.wordStats)
+      .filter(w=>WORD_INDEX[w] && S.wordStats[w].box<MASTER_BOX)
+      .map(w=>({w, st:S.wordStats[w]}))
+      .sort((a,b)=> (a.st.dueRun-b.st.dueRun) || (a.st.box-b.st.box) || (b.st.missed-a.st.missed));
+    let words=entries.slice(0,10).map(e=>WORD_INDEX[e.w]);
+    // top up with fresh tier-appropriate words if thin
+    if(words.length<6){
+      const have=new Set(words.map(q=>q.word));
+      const fresh=shuffle(Object.values(WORD_INDEX).filter(q=>!have.has(q.word) && (q.tier||2)<=maxTierForLevel()));
+      words=words.concat(fresh.slice(0,8-words.length));
+    }
+    return [{levelName:'Field Review · weak spots', questions:shuffle(words)}];
+  }
+  function buildCustomRun(list){
+    const qs=list.words.map(q=>Object.assign({},q));
+    return [{levelName:list.name, questions:shuffle(qs)}];
+  }
 
-            function showPostBattle(victory) {
-                postBattleSection.classList.remove('hidden');
-                if (missedWords.length > 0) {
-                    reviewSection.classList.remove('hidden');
-                    missedWordsList.innerHTML = missedWords.map(q => `<div class="p-2 border-b border-slate-700"><p class="font-bold text-white">"${q.word}"</p><p class="text-sm text-slate-300">${q.rule}</p></div>`).join('');
-                } else {
-                    missedWordsList.innerHTML = `<p class="text-center text-green-400 font-semibold">Perfect mission! No words to review.</p>`; reviewSection.classList.remove('hidden');
-                }
-            }
-            
-            // --- UI Update & Reset Functions ---
-            function updatePlayerUI() {
-                const xpForNext = getXpForNextLevel(playerState.level);
-                playerLevelDisplay.textContent = `Agent Level ${playerState.level}`;
-                playerXpDisplay.textContent = `${playerState.xp} / ${xpForNext} XP`;
-                xpBarFill.style.width = `${(playerState.xp / xpForNext) * 100}%`;
-                highScoreDisplay.textContent = `High Score: ${playerState.highScore}`;
-                startScreenAvatar.textContent = playerState.selectedAvatar;
-            }
-            function updateXpDisplay() { xpDisplay.textContent = `XP: ${currentXp}`; }
-            function updateLives() { livesContainer.innerHTML = ''; for (let i = 0; i < GAME_LIVES; i++) { const heart = document.createElement('span'); heart.innerHTML = '❤️'; heart.classList.add('text-2xl', 'transition-opacity', 'duration-500'); if (i >= lives) heart.classList.add('opacity-30', 'life-lost'); livesContainer.appendChild(heart); }}
-            function updateStreakAndIntel() { streakBar.style.width = `${(streak / STREAK_TARGET) * 100}%`; streakCounterText.textContent = `${streak} / ${STREAK_TARGET} (Intel: ${intel})`; }
-            function resetQuestionUI() { feedbackContainer.classList.add('hidden'); nextButton.classList.add('hidden'); optionsContainer.innerHTML = ''; clearTimeout(timerInterval); }
-            function highlightAnswers(selected, correct) { Array.from(optionsContainer.children).forEach(button => { button.disabled = true; button.classList.add('btn-disabled'); if (button.textContent === correct) button.classList.add('btn-correct'); else if (button.textContent === selected) button.classList.add('btn-incorrect'); });}
+  function startRun(mode, payload){
+    sfx.click();
+    S.runsPlayed=(S.runsPlayed||0)+1;
+    let missions;
+    if(mode==='review') missions=buildReviewRun();
+    else if(mode==='custom') missions=buildCustomRun(payload);
+    else missions=buildStandardRun();
+    if(!missions.length || !missions[0].questions.length){ toast('No cases available','Play a standard run first to build your review pile.'); return; }
+    run={ mode, missions, mi:0, qi:0, xp:0, lives:LIVES, streak:0, correctStreak:0,
+          missed:[], tookDamage:false, timer:null };
+    updateLives(); updateStreak(); setupGadgetBtn();
+    show('play'); loadQuestion();
+  }
 
-            // --- Gadget Logic ---
-            function setupGadgetButton() {
-                if (equippedGadget) {
-                    const gadget = GADGETS[equippedGadget];
-                    gadgetButton.innerHTML = `${gadget.icon} ${gadget.name}`;
-                    gadgetButton.classList.remove('hidden');
-                    gadgetButton.disabled = false;
-                } else {
-                    gadgetButton.classList.add('hidden');
-                }
-            }
-            function useGadget() {
-                if (!equippedGadget) return;
-                
-                playerState.gadgetsUsed = (playerState.gadgetsUsed || 0) + 1;
-                checkAchievement('gadget_master');
-                
-                switch(equippedGadget) {
-                    case 'decoy_deflector':
-                        const question = gameDataCopy[currentLevelIndex].questions[currentQuestionIndex];
-                        const incorrectButton = Array.from(optionsContainer.children).find(b => b.textContent !== question.word && !b.disabled);
-                        if (incorrectButton) { incorrectButton.classList.add('btn-disabled'); incorrectButton.disabled = true; }
-                        break;
-                    case 'time_freeze':
-                        clearInterval(timerInterval);
-                        timerBar.style.transition = 'none'; // pause animation
-                        const currentWidth = timerBar.offsetWidth / timerBar.parentElement.offsetWidth;
-                        const remainingTime = currentWidth * GAME_TIME;
-                        const newTime = remainingTime + 5;
-                        setTimeout(() => startTimer(newTime, timerBar, handleTimeout), 100);
-                        break;
-                }
-                gadgetButton.disabled = true;
-                gadgetButton.classList.add('btn-disabled');
-                if(equippedGadget !== 'spectre_stunner') equippedGadget = null;
-            }
+  function currentQ(){ return run.missions[run.mi].questions[run.qi]; }
 
-            // --- Achievements Logic ---
-            function checkAchievement(id) {
-                if (playerState.achievements[id].unlocked) return; let unlocked = false;
-                switch(id) {
-                    case 'first_mission': unlocked = true; break;
-                    case 'hot_streak': if (correctStreak >= 5) unlocked = true; break;
-                    case 'perfect_mission': if (!tookDamage) unlocked = true; break;
-                    case 'comeback_kid': unlocked = true; break;
-                    case 'word_warrior': if (playerState.level >= 5) unlocked = true; break;
-                    case 'spelling_master': if (playerState.level >= 10) unlocked = true; break;
-                    case 'gadget_master': if (playerState.gadgetsUsed >= 3) unlocked = true; break;
-                }
-                if (unlocked) { playerState.achievements[id].unlocked = true; showAchievementToast(id); savePlayerState(); }
-            }
-            function showAchievementToast(id) { const achievement = playerState.achievements[id]; const toast = document.createElement('div'); toast.className = 'achievement-toast bg-yellow-500 text-slate-900 p-4 rounded-lg shadow-2xl border-2 border-yellow-400'; toast.innerHTML = `<p class="font-bold text-lg">🏆 Badge Unlocked!</p><p>${achievement.name}</p>`; achievementToastContainer.appendChild(toast); setTimeout(() => toast.remove(), 5000); }
-            function populateAchievementsModal() { achievementsList.innerHTML = ''; for (const id in playerState.achievements) { const ach = playerState.achievements[id]; const unlocked = ach.unlocked; const element = document.createElement('div'); element.className = `flex items-center gap-4 p-3 rounded-lg ${unlocked ? 'bg-slate-700' : 'bg-slate-800 opacity-60'}`; element.innerHTML = `<div class="text-4xl">${unlocked ? '🏆' : '❓'}</div><div><h3 class="font-bold ${unlocked ? 'text-yellow-400' : 'text-slate-300'}">${ach.name}</h3><p class="text-slate-400">${ach.desc}</p></div>`; achievementsList.appendChild(element); }}
+  function loadQuestion(){
+    stopTimer();
+    $('feedback').classList.add('hidden'); $('btn-next').classList.add('hidden'); $('verdict').className='stamp';
+    const m=run.missions[run.mi], q=currentQ();
+    $('mission-count').textContent=`Case ${run.mi+1} / ${run.missions.length}`;
+    $('run-xp').textContent=run.xp;
+    $('mission-name').textContent=m.levelName;
+    const tier=q.tier||2;
+    const tb=$('q-tier'); tb.className='tierbadge t'+tier; tb.textContent='Tier '+tier;
+    if(q.sentence) $('prompt').innerHTML=q.sentence.replace('_____','<span class="blank">?</span>');
+    else $('prompt').textContent='Which spelling is correct?';
+    const opts=shuffle([q.word,...q.decoys]);
+    const box=$('options'); box.innerHTML=''; box.style.gridTemplateColumns=opts.length<=2?'1fr':'1fr 1fr';
+    opts.forEach(o=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=o; b.onclick=()=>answer(o,b); box.appendChild(b); });
+    setupGadgetBtn();
+    const secs = QTIME + (tier-1)*3;   // harder words get more time
+    startTimer(secs,$('timer'),()=>answer(null,null));
+  }
 
-            // --- Q-Branch Logic ---
-            function populateQBranchModal() {
-                avatarSelection.innerHTML = ''; gadgetSelection.innerHTML = '';
-                // Avatars
-                for (const avatar in AVATARS) {
-                    const isUnlocked = playerState.unlockedAvatars.includes(avatar);
-                    const div = document.createElement('div');
-                    div.className = `text-5xl p-2 rounded-lg cursor-pointer transition-transform duration-200 ${isUnlocked ? 'hover:scale-110' : 'opacity-40 cursor-not-allowed'}`;
-                    div.textContent = avatar;
-                    if (isUnlocked && avatar === playerState.selectedAvatar) div.classList.add('avatar-selected');
-                    
-                    if (isUnlocked) {
-                        div.onclick = () => { playerState.selectedAvatar = avatar; updatePlayerUI(); populateQBranchModal(); };
-                    } else {
-                        div.title = `Unlock at Level ${AVATARS[avatar]}`;
-                        div.onclick = (e) => {
-                            const target = e.currentTarget;
-                            if (target.classList.contains('locked-shake')) return; // Prevent re-triggering
-                            target.classList.add('locked-shake');
-                            setTimeout(() => {
-                                target.classList.remove('locked-shake');
-                            }, 400);
-                        };
-                    }
-                    avatarSelection.appendChild(div);
-                }
-                // Gadgets
-                for (const gadgetId in GADGETS) {
-                    const gadget = GADGETS[gadgetId];
-                    const button = document.createElement('button');
-                    button.className = 'btn w-full text-left flex items-center justify-between p-3 rounded-lg bg-slate-700 border border-slate-600 disabled:opacity-50 disabled:cursor-not-allowed';
-                    button.innerHTML = `<div><p class="font-bold">${gadget.icon} ${gadget.name}</p><p class="text-sm text-slate-400">${gadget.desc}</p></div><span class="font-bold text-amber-400 bg-slate-800 px-3 py-1 rounded-md">${gadget.cost} Intel</span>`;
-                    button.disabled = intel < gadget.cost;
-                    button.onclick = () => {
-                        intel -= gadget.cost;
-                        equippedGadget = gadgetId;
-                        savePlayerState();
-                        closeQBranchButton.click();
-                    };
-                    gadgetSelection.appendChild(button);
-                }
-            }
+  function answer(choice, btn){
+    stopTimer(); $('timer').style.transition='none';
+    const q=currentQ(); const correct=choice===q.word;
+    $$('#options .opt').forEach(b=>{ b.disabled=true;
+      if(b.textContent===q.word) b.classList.add('correct');
+      else if(b===btn) b.classList.add('wrong'); else b.classList.add('dim'); });
+    const v=$('verdict'); v.className='stamp '+(correct?'ok':'no'); v.textContent=correct?'Verified':'Flagged';
+    void v.offsetWidth; v.classList.add('show');
+    recordResult(q.word, correct);
+    if(correct){
+      S.solved++; sfx.good(); addXp(XP_CORRECT); run.streak++; run.correctStreak++;
+      $('feedback-title').textContent='✓ Verified — correct spelling. +'+XP_CORRECT+' XP'; $('feedback-title').style.color='var(--decode)';
+      if(run.streak>=STREAK_TARGET){ run.streak=0; S.intel++; save(); toast('🛰 Intel gained','Streak bonus banked. Spend it in Q-Branch.'); }
+      if(run.correctStreak>=5) unlock('hot'); if(run.correctStreak>=10) unlock('sharp');
+    } else {
+      sfx.bad(); shake($('play-panel')); run.lives--; run.streak=0; run.correctStreak=0; run.tookDamage=true; updateLives();
+      $('feedback-title').textContent = choice===null?`⏱ Time's up — the answer was "${q.word}".`:`✗ Flagged — the answer was "${q.word}".`;
+      $('feedback-title').style.color='var(--alert)';
+      if(!run.missed.some(x=>x.word===q.word)) run.missed.push(q);
+    }
+    if(masteredCount()>=25) unlock('graduate');
+    $('feedback-tip').textContent=q.rule||'Check every letter carefully.';
+    $('feedback').classList.remove('hidden'); $('run-xp').textContent=run.xp; updateStreak(); save();
+    if(run.lives<=0) setTimeout(()=>endRun(false),1600); else $('btn-next').classList.remove('hidden');
+  }
 
-            // --- Event Listeners ---
-            function setupEventListeners() {
-                startButton.addEventListener('click', startGame);
-                nextButton.addEventListener('click', next);
-                returnHomeButton.addEventListener('click', goHome);
-                gadgetButton.addEventListener('click', useGadget);
-                interludeInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') submitInterludeButton.click(); });
-                achievementsButton.addEventListener('click', () => { populateAchievementsModal(); achievementsModal.classList.remove('hidden'); });
-                closeAchievementsButton.addEventListener('click', () => achievementsModal.classList.add('hidden'));
-                qBranchButton.addEventListener('click', () => { populateQBranchModal(); qBranchModal.classList.remove('hidden'); });
-                closeQBranchButton.addEventListener('click', () => { qBranchModal.classList.add('hidden'); savePlayerState(); });
-                homeButtons.forEach(button => button.addEventListener('click', goHome));
-            }
-            
-            // --- Initial Load ---
-            function init() { loadPlayerState(); updatePlayerUI(); unlockAvatars(); setupEventListeners(); }
-            init();
-        });
-    </script>
+  function next(){ sfx.click(); run.qi++;
+    if(run.qi>=run.missions[run.mi].questions.length) bonusRound(); else loadQuestion(); }
+
+  // ---------- bonus rounds ----------
+  function spellingWordsIn(m){ return m.questions.filter(q=>!q.sentence); }
+  function bonusRound(){
+    const pool=spellingWordsIn(run.missions[run.mi]);
+    const roll=Math.random();
+    if(PROOF_DATA.length && roll<0.34) return proofRound();
+    if(pool.length===0){ return nextMission(); }
+    if(roll<0.67) enemyRound(pool); else interludeRound(pool);
+  }
+
+  function interludeRound(pool){ show('interlude');
+    const d=pool[Math.floor(Math.random()*pool.length)];
+    $('interlude-feedback').textContent=''; $('interlude-input').value='';
+    const type=Math.random()<0.5?'scramble':'memory'; const wordEl=$('interlude-word'), input=$('interlude-input');
+    if(type==='scramble'){ $('interlude-instr').textContent='Unscramble the recovered word.';
+      let sc=d.word.split(''); do{shuffle(sc);}while(sc.join('')===d.word && d.word.length>1);
+      wordEl.className='cipherword scrambled'; wordEl.innerHTML='';
+      sc.forEach((ch,i)=>{const s=document.createElement('span'); s.textContent=ch; s.style.animationDelay=(i*0.05)+'s'; wordEl.appendChild(s);});
+      input.style.visibility='visible';
+    } else { $('interlude-instr').textContent='Memorize the word — then type it from memory.';
+      wordEl.className='cipherword'; wordEl.textContent=d.word; input.style.visibility='hidden';
+      setTimeout(()=>{ wordEl.textContent='• • • • •'; input.style.visibility='visible'; input.focus(); },3600); }
+    $('interlude-clue').textContent='Clue: '+(d.clue||'Recovered field intel.'); input.focus();
+    $('btn-interlude').onclick=()=>endInterlude(d,true);
+    startTimer(INTERLUDE_TIME,$('interlude-timer'),()=>endInterlude(d,false)); }
+  function endInterlude(d,submitted){ stopTimer();
+    const ok=$('interlude-input').value.toLowerCase().trim()===d.word.toLowerCase(); const fb=$('interlude-feedback');
+    if(submitted&&ok){ sfx.good(); addXp(XP_INTERLUDE); fb.textContent='✓ Decoded! +'+XP_INTERLUDE+' XP'; fb.style.color='var(--decode)'; confetti(); }
+    else if(submitted){ sfx.bad(); fb.textContent=`✗ It was "${d.word}".`; fb.style.color='var(--alert)'; }
+    else { fb.textContent=`⏱ Time's up — "${d.word}".`; fb.style.color='var(--badge)'; }
+    $('run-xp').textContent=run.xp; setTimeout(nextMission,1700); }
+
+  function enemyRound(pool){ show('enemy'); $('enemy-feedback').textContent='';
+    const q=pool[Math.floor(Math.random()*pool.length)];
+    const showCorrect=Math.random()<0.55; const wordToShow=showCorrect?q.word:q.decoys[0];
+    let revealed=0; const el=$('enemy-word');
+    const dec=setInterval(()=>{ revealed++; el.innerHTML='';
+      for(let i=0;i<wordToShow.length;i++){ const s=document.createElement('span'); s.className='glyph';
+        if(i<revealed){ s.textContent=wordToShow[i]; s.classList.add('reveal-in'); } else s.textContent='█'; el.appendChild(s); }
+      if(revealed>=wordToShow.length) clearInterval(dec); },260);
+    const start=Date.now(); let done=false;
+    const finish=(chose)=>{ if(done) return; done=true; clearInterval(dec); stopTimer();
+      [$('btn-legit'),$('btn-fake')].forEach(b=>b.disabled=true); const fb=$('enemy-feedback');
+      if(chose===null){ fb.textContent=`⏱ Time's up — "${wordToShow}" was ${showCorrect?'correct':'misspelled'}.`; fb.style.color='var(--badge)'; }
+      else if(chose===showCorrect){ const t=(Date.now()-start)/1000; const gain=Math.max(12,XP_ENEMY_MAX-Math.floor(t*3));
+        sfx.good(); addXp(gain); fb.textContent='✓ Correct call! +'+gain+' XP'; fb.style.color='var(--decode)'; if(t<3) unlock('codebreaker'); }
+      else { sfx.bad(); fb.textContent=`✗ Wrong call — "${wordToShow}" was ${showCorrect?'correctly spelled':'a fake'}.`; fb.style.color='var(--alert)'; }
+      $('run-xp').textContent=run.xp; setTimeout(nextMission,1800); };
+    $('btn-legit').disabled=false; $('btn-fake').disabled=false;
+    $('btn-legit').onclick=()=>finish(true); $('btn-fake').onclick=()=>finish(false);
+    startTimer(ENEMY_TIME,$('enemy-timer'),()=>finish(null)); }
+
+  function proofRound(){ show('proof');
+    const item=PROOF_DATA[Math.floor(Math.random()*PROOF_DATA.length)];
+    $('proof-feedback').classList.add('hidden');
+    const box=$('proof-sentence'); box.innerHTML='';
+    const toks=item.sentence.split(' ');
+    let done=false;
+    const finish=(pickedEl,timedOut)=>{ if(done) return; done=true; stopTimer();
+      $$('#proof-sentence .tok').forEach(t=>{ t.classList.add('locked');
+        const clean=t.dataset.clean;
+        if(clean===item.wrong) t.classList.add('reveal'); });
+      const fb=$('proof-feedback'); const ok=pickedEl && pickedEl.dataset.clean===item.wrong;
+      if(ok){ sfx.good(); addXp(XP_PROOF); pickedEl.classList.remove('reveal'); pickedEl.classList.add('right');
+        S.proofHits=(S.proofHits||0)+1; if(S.proofHits>=5) unlock('proofer');
+        $('proof-fb-title').textContent=`✓ Caught it! "${item.wrong}" → "${item.right}". +${XP_PROOF} XP`; $('proof-fb-title').style.color='var(--decode)'; confetti(); }
+      else { sfx.bad(); if(pickedEl) pickedEl.classList.add('wrong-pick');
+        $('proof-fb-title').textContent = timedOut?`⏱ Time's up — "${item.wrong}" should be "${item.right}".`:`✗ "${item.wrong}" should be "${item.right}".`;
+        $('proof-fb-title').style.color='var(--alert)'; }
+      $('proof-fb-tip').textContent=item.rule; $('proof-feedback').classList.remove('hidden');
+      recordResult(item.right, ok); save(); $('run-xp').textContent=run.xp; setTimeout(nextMission,2100); };
+    toks.forEach((tok,i)=>{ const clean=tok.replace(/[^A-Za-z']/g,'');
+      const span=document.createElement('span'); span.className='tok'; span.textContent=tok; span.tabIndex=0;
+      span.dataset.clean=clean;
+      span.onclick=()=>finish(span,false);
+      span.onkeydown=(e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); finish(span,false);} };
+      box.appendChild(span); if(i<toks.length-1) box.appendChild(document.createTextNode(' ')); });
+    startTimer(PROOF_TIME,$('proof-timer'),()=>finish(null,true)); }
+
+  function nextMission(){ run.mi++; run.qi=0;
+    if(run.mi>=run.missions.length) endRun(true); else { show('play'); loadQuestion(); } }
+
+  function endRun(cleared){ stopTimer();
+    if(run.xp>S.highScore) S.highScore=run.xp; unlock('first');
+    if(!run.tookDamage && cleared) unlock('flawless'); save();
+    show('boss'); $('battle-q').classList.add('hidden'); $('debrief').classList.add('hidden');
+    if(!cleared){ $('battle-log-text').textContent='Mission aborted — out of lives.'; $('battle-log-text').style.color='var(--alert)'; showDebrief(false); }
+    else bossBattle(); }
+
+  function bossBattle(){
+    $('gadget-log').textContent=S.equipped==='stunner'?'Spectre Stunner charged 💥':'';
+    $('p-fighter').textContent=S.avatar;
+    let pHP=run.lives, bHP=Math.max(1,run.missed.length), maxB=bHP;
+    $('p-hp').style.width=(pHP/LIVES)*100+'%'; $('b-hp').style.width='100%';
+    $('battle-log-text').textContent='The Spelling Spectre materializes!'; $('battle-log-text').style.color='var(--badge)';
+    const words=run.missed.length?shuffle([...run.missed])
+      :[{word:'congratulations',decoys:['congradulations','congratluations','congradolations'],rule:'You made no mistakes — a flawless case!',clue:'A message of praise for an achievement.'}];
+    let idx=0, stunner=S.equipped==='stunner';
+    function turn(){ if(pHP<=0||bHP<=0){ endBoss(pHP>0,pHP); return; }
+      $('battle-q').classList.remove('hidden'); const q=words[idx];
+      $('battle-log-text').textContent='Counter the Spectre!';
+      $('battle-prompt').innerHTML=q.sentence?q.sentence.replace('_____','<span class="blank">?</span>'):'Quick — which spelling is correct?';
+      const box=$('battle-options'); box.innerHTML=''; const opts=shuffle([q.word,...q.decoys]);
+      box.style.gridTemplateColumns=opts.length<=2?'1fr':'1fr 1fr';
+      opts.forEach(o=>{ const b=document.createElement('button'); b.className='opt'; b.textContent=o; b.onclick=()=>hit(b,q.word); box.appendChild(b); }); }
+    function hit(btn,correct){ $$('#battle-options .opt').forEach(b=>b.disabled=true);
+      if(btn.textContent===correct){ sfx.hit(); bHP--; btn.classList.add('correct'); $('b-fighter').classList.add('hit-b'); $('battle-log-text').textContent='Direct hit!';
+        if(stunner){ bHP--; stunner=false; $('gadget-log').textContent='Stunner lands a critical hit! 💥'; countGadget(); S.equipped=null; save(); } }
+      else { sfx.bad(); pHP--; btn.classList.add('wrong'); $$('#battle-options .opt').forEach(b=>{ if(b.textContent===correct) b.classList.add('correct'); });
+        $('p-fighter').classList.add('hit-p'); $('battle-log-text').textContent='The Spectre strikes back!'; }
+      $('p-hp').style.width=Math.max(0,(pHP/LIVES)*100)+'%'; $('b-hp').style.width=Math.max(0,(bHP/maxB)*100)+'%';
+      setTimeout(()=>{ $('p-fighter').classList.remove('hit-p'); $('b-fighter').classList.remove('hit-b'); idx=(idx+1)%words.length; turn(); },1400); }
+    setTimeout(turn,1800); }
+  function endBoss(won,hp){ $('battle-q').classList.add('hidden');
+    if(won){ sfx.win(); confetti(); $('battle-log-text').textContent='VICTORY — the Spectre is vanquished!'; $('battle-log-text').style.color='var(--decode)'; if(hp===1) unlock('wire'); }
+    else { sfx.bad(); $('battle-log-text').textContent='DEFEATED — the Spectre proved too strong.'; $('battle-log-text').style.color='var(--alert)'; }
+    S.intel+=1; save(); showDebrief(won); }
+
+  function showDebrief(won){ $('debrief').classList.remove('hidden'); $('debrief-xp').textContent=run.xp;
+    $('debrief-intel').textContent=`Intel now: ${S.intel}   ·   Mastered: ${masteredCount()}   ·   Solved (all-time): ${S.solved}`;
+    $('review').classList.remove('hidden');
+    if(run.missed.length){ $('review-list').innerHTML=run.missed.map(q=>
+      `<div style="padding:10px 12px; border-radius:10px; background:rgba(10,15,34,.6); border:1px solid var(--line)">
+        <div class="mono" style="font-weight:700; color:#fff">${q.word}</div>
+        <div class="muted" style="font-size:13px; margin-top:2px">${q.rule||''}</div></div>`).join('');
+    } else $('review-list').innerHTML=`<p style="text-align:center; color:var(--decode); font-weight:600">Perfect case — no words to review. 🎯</p>`;
+    refreshHome(); }
+
+  function updateLives(){ const box=$('lives'); box.innerHTML='';
+    for(let i=0;i<LIVES;i++){ const s=document.createElement('span'); s.className='life'; s.textContent='❤';
+      if(i>=run.lives){ s.classList.add('out'); if(i===run.lives) s.classList.add('pop'); } box.appendChild(s); } }
+  function updateStreak(){ $('streak-bar').style.width=(run.streak/STREAK_TARGET)*100+'%';
+    $('streak-text').textContent=`${run.streak} / ${STREAK_TARGET}  ·  Intel ${S.intel}`; }
+  function setupGadgetBtn(){ const b=$('btn-gadget');
+    if(S.equipped){ const g=GADGETS[S.equipped]; b.innerHTML=`${g.icon} ${g.name}`; b.classList.remove('hidden'); b.disabled=false; b.classList.remove('btn-ghost'); b.onclick=useGadget; }
+    else b.classList.add('hidden'); }
+  function countGadget(){ S.gadgetsUsed=(S.gadgetsUsed||0)+1; if(S.gadgetsUsed>=3) unlock('qfav'); save(); }
+  function useGadget(){ if(!S.equipped) return; const g=S.equipped;
+    if(g==='decoy'){ const wrong=$$('#options .opt').filter(b=>b.textContent!==currentQ().word && !b.disabled);
+      if(wrong.length){ const t=wrong[Math.floor(Math.random()*wrong.length)]; t.classList.add('dim'); t.disabled=true; } countGadget(); S.equipped=null; }
+    else if(g==='freeze'){ const bar=run.timerBar; const remainFrac=bar.offsetWidth/bar.parentElement.offsetWidth;
+      const remain=remainFrac*run.timerSec+6; stopTimer(); startTimer(remain,bar,run.timerCb); countGadget(); S.equipped=null; }
+    if(g!=='stunner'){ sfx.click(); $('btn-gadget').disabled=true; $('btn-gadget').classList.add('btn-ghost'); save(); refreshHome(); } }
+
+  function unlock(id){ if(S.ach[id]) return; S.ach[id]=true; save(); toast('🏅 Badge unlocked',ACH[id].name); }
+  function toast(t,b){ const el=document.createElement('div'); el.className='toast';
+    el.innerHTML=`<b style="display:block; font-family:'Chakra Petch'">${t}</b><span style="font-size:14px">${b}</span>`;
+    $('toasts').appendChild(el); setTimeout(()=>el.remove(),5000); }
+  function renderBadges(){ $('badge-list').innerHTML='';
+    for(const id in ACH){ const got=S.ach[id]; const d=document.createElement('div'); d.className='ach'+(got?'':' locked');
+      d.innerHTML=`<div class="ic">${got?'🏅':'🔒'}</div><div><div class="hud" style="font-weight:700; color:${got?'var(--badge)':'var(--muted)'}">${ACH[id].name}</div><div class="muted" style="font-size:13px">${ACH[id].desc}</div></div>`;
+      $('badge-list').appendChild(d); } }
+
+  function renderQBranch(){ $('qb-intel').textContent=S.intel;
+    const av=$('avatars'); av.innerHTML='';
+    for(const a in AVATARS){ const unl=S.unlocked.includes(a); const d=document.createElement('div');
+      d.className='avatar'+(unl?'':' locked')+(a===S.avatar?' pick':''); d.textContent=a;
+      if(unl) d.onclick=()=>{ sfx.click(); S.avatar=a; save(); refreshHome(); renderQBranch(); };
+      else { d.title='Unlocks at Level '+AVATARS[a]; d.onclick=()=>shake(d); } av.appendChild(d); }
+    const gs=$('gadgets'); gs.innerHTML='';
+    for(const id in GADGETS){ const g=GADGETS[id]; const b=document.createElement('button');
+      const owned=S.equipped===id; b.className='gadget'+(owned?' equipped':'');
+      b.innerHTML=`<div><div class="hud" style="font-weight:700">${g.icon} ${g.name}</div><div class="muted" style="font-size:13px">${g.desc}</div></div><span class="chip">${owned?'Equipped':g.cost+' Intel'}</span>`;
+      b.disabled=owned||S.intel<g.cost;
+      b.onclick=()=>{ if(S.intel<g.cost) return; sfx.click(); S.intel-=g.cost; S.equipped=id; save(); refreshHome(); renderQBranch(); };
+      gs.appendChild(b); } }
+
+  // ---------- custom lists ----------
+  function renderCustomLists(){ const box=$('custom-lists'); box.innerHTML='';
+    if(!S.customLists.length){ box.innerHTML=`<p class="muted" style="font-size:13px; margin:0">No custom missions yet. Add this week's spelling list to drop it into rotation.</p>`; return; }
+    S.customLists.forEach(list=>{ const row=document.createElement('div'); row.className='listrow';
+      row.innerHTML=`<div style="min-width:0"><div class="hud" style="font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${escapeHtml(list.name)}</div><div class="mono muted" style="font-size:12px">${list.words.length} words</div></div>`;
+      const actions=document.createElement('div'); actions.style.cssText='display:flex; gap:8px; flex:none';
+      const play=document.createElement('button'); play.className='btn btn-decode'; play.style.padding='8px 14px'; play.textContent='Play';
+      play.onclick=()=>startRun('custom',list);
+      const del=document.createElement('button'); del.className='btn iconbtn btn-danger'; del.textContent='🗑';
+      del.title='Delete'; del.onclick=()=>{ if(confirm(`Delete "${list.name}"?`)){ S.customLists=S.customLists.filter(l=>l.id!==list.id); reindex(); save(); renderCustomLists(); } };
+      actions.appendChild(play); actions.appendChild(del); row.appendChild(actions); box.appendChild(row); }); }
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+  function saveCustomList(){
+    const name=$('list-name').value.trim(); const raw=$('list-words').value;
+    const err=$('list-error'); err.textContent='';
+    if(!name){ err.textContent='Give the mission a name.'; return; }
+    const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+    const words=[];
+    for(const line of lines){ const [wRaw,clueRaw]=line.split('|'); const w=(wRaw||'').trim().toLowerCase();
+      if(!/^[a-z][a-z'’-]*$/.test(w)) continue; if(words.some(x=>x.word===w)) continue;
+      words.push({word:w, clue:(clueRaw||'').trim()||'Custom word.', rule:'Custom word — check every letter.', decoys:genDecoys(w,3), tier:tierByLength(w), kind:'spelling'}); }
+    if(words.length<3){ err.textContent='Add at least 3 valid words (letters only, one per line).'; return; }
+    const id='cl_'+Date.now(); S.customLists.push({id,name,words}); reindex(); save();
+    unlock('curator'); $('list-name').value=''; $('list-words').value=''; closeModal('modal-list');
+    renderCustomLists(); toast('Mission saved',`"${name}" · ${words.length} words ready.`);
+  }
+
+  function openModal(id){ $(id).classList.remove('hidden'); }
+  function closeModal(id){ $(id).classList.add('hidden'); }
+
+  // ---------- wire ----------
+  $('btn-start').onclick=()=>startRun('standard');
+  $('btn-review').onclick=()=>startRun('review');
+  $('btn-next').onclick=next;
+  $('btn-home').onclick=()=>{ sfx.click(); goHome(); };
+  $$('.home-btn').forEach(b=>b.onclick=()=>{ sfx.click(); goHome(); });
+  $('btn-badges').onclick=()=>{ sfx.click(); renderBadges(); openModal('modal-badges'); };
+  $('btn-qbranch').onclick=()=>{ sfx.click(); renderQBranch(); openModal('modal-qbranch'); };
+  $('btn-new-list').onclick=()=>{ sfx.click(); $('list-error').textContent=''; openModal('modal-list'); };
+  $('btn-save-list').onclick=saveCustomList;
+  $('btn-settings').onclick=()=>{ sfx.click(); $('set-sound').checked=S.sound; $('set-motion').checked=!S.motion; openModal('modal-settings'); };
+  $$('.close-modal').forEach(b=>b.onclick=()=>{ sfx.click(); closeModal(b.dataset.modal); });
+  $$('.modal').forEach(m=>m.onclick=e=>{ if(e.target===m) closeModal(m.id); });
+  $('interlude-input').addEventListener('keyup',e=>{ if(e.key==='Enter') $('btn-interlude').click(); });
+  $('set-sound').onchange=e=>{ S.sound=e.target.checked; save(); if(S.sound) sfx.click(); };
+  $('set-motion').onchange=e=>{ S.motion=!e.target.checked; document.body.classList.toggle('nomotion',!S.motion); save(); };
+  $('btn-reset').onclick=()=>{ if(confirm('Reset all agent progress? This cannot be undone.')){ localStorage.removeItem(KEY); load(); reindex(); refreshHome(); closeModal('modal-settings'); toast('Progress reset','A fresh case file awaits.'); } };
+
+  load(); reindex(); unlockAvatars(); refreshHome(); show('home');
+});
+</script>
 </body>
 </html>
-
-
-
